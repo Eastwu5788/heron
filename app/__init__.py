@@ -1,10 +1,12 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_cache import Cache
 
 from config.setting import config, MIDDLEWARE
 from .middleware.base_middleware import BaseMiddleWare
 
 db = SQLAlchemy()
+cache = Cache()
 
 
 def create_app(config_name):
@@ -23,10 +25,17 @@ def create_app(config_name):
 
     # 初始化SQLAlchemy数据库
     db.init_app(app)
+    cache.init_app(app)
 
-    # 注册蓝图
+    # 注册蓝图 TODO: 蓝图写到ini配置文件中
     from app.modules.build import build
     app.register_blueprint(build, url_prefix="/build")
+
+    from app.modules.core import core
+    app.register_blueprint(core, url_prefix="/core")
+
+    from app.modules.passport import passport
+    app.register_blueprint(passport, url_prefix="/passport")
 
     # 注册中间件
     for middle in MIDDLEWARE:

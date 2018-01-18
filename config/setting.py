@@ -16,11 +16,18 @@ MIDDLEWARE = [
 ]
 
 # 请求是否进行安全检查
-REQUEST_SECRET_CHECK = True
+REQUEST_SECRET_CHECK = False
 
 # 请求白名单
 WHITE_LIST = [
-   "/build/initialize/index",
+    "/build/initialize/index",
+    "/core/appversion/isopen",
+]
+
+# 手机号白名单
+MOBILE_WHITE_LIST = [
+    "13718416506",
+    "18196549345",
 ]
 
 # load config file with 'dev' or 'pro'

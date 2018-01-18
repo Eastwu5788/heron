@@ -17,6 +17,9 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 INI_MYSQL = configparser.ConfigParser()
 INI_MYSQL.read(os.path.join(basedir, 'mysql.ini'))
 
+INI_MEMCACHED = configparser.ConfigParser()
+INI_MEMCACHED.read(os.path.join(basedir, 'memcached.ini'))
+
 
 class DevelopConfig(BaseConfig):
     # Open Debug mode
@@ -47,3 +50,15 @@ class DevelopConfig(BaseConfig):
         # 添加到配置文件中
         app.config["SQLALCHEMY_BINDS"] = sql_binds
         app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    @staticmethod
+    def config_memcached(app):
+        """
+        Memcached服务器集群注册
+        """
+        memcached = []
+        for section in INI_MEMCACHED.sections():
+            server = INI_MEMCACHED[section]["host"] + ":" + INI_MEMCACHED[section]["port"]
+            if server:
+                memcached.append(server)
+        app.config["CACHE_MEMCACHED_SERVERS"] = memcached

@@ -1,8 +1,9 @@
 from app import db
+from app.models.base.base import BaseModel
 import datetime
 
 
-class UserAccessTokenModel(db.Model):
+class UserAccessTokenModel(db.Model, BaseModel):
     __bind_key__ = "a_account"
     __tablename__ = "user_access_token"
 

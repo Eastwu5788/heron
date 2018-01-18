@@ -2,9 +2,10 @@ import json
 import time
 
 from app.common.error_message import error_message
+from .json_encoder import JsonEncoder
 
 
-def json_response(code=200, body="", message=""):
+def json_response(code=0, body=None, message=""):
     """
     通用JSON响应方法
     :param code: 响应识别码
@@ -18,10 +19,10 @@ def json_response(code=200, body="", message=""):
         "result": body,
         "timestamp": int(time.time())
     }
-    return json.dumps(result)
+    return json.dumps(result, cls=JsonEncoder)
 
 
-def json_success_response(body):
+def json_success_response(body={}):
     """
     响应内容正确
     :param body: 响应体
@@ -42,4 +43,4 @@ def json_fail_response(code=500, message=""):
         if not message:
             message = "服务器内部错误"
 
-    return json_response(code, body="", message=message)
+    return json_response(code, body={}, message=message)

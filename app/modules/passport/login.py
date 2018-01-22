@@ -26,7 +26,7 @@ class CheckHandler(BaseHandler):
             "perfect_info_pwd": 0,  # 是否需要完善密码：1是0否
         }
 
-        mobile = params["mobile"].replace(" ", "")
+        mobile = params["mobile"]
         user = UserAccountModel.query_account_by_mobile(mobile, params["country"], True)
 
         # 1.用户是否存在 2.用户是否设置了密码

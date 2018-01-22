@@ -20,15 +20,31 @@ INI_MYSQL.read(os.path.join(basedir, 'mysql.ini'))
 INI_MEMCACHED = configparser.ConfigParser()
 INI_MEMCACHED.read(os.path.join(basedir, 'memcached.ini'))
 
+INI_CONFIG = configparser.ConfigParser()
+INI_CONFIG.read(os.path.join(basedir, "config.ini"))
+
 
 class DevelopConfig(BaseConfig):
     # Open Debug mode
     DEBUG = True
 
+    # 短信平台云片的API KEY
+    SMS_YP_API_KEY = INI_CONFIG["sms_yp"]["api_key"]
+
+    # 图片上传路径和URI
+    UPLOAD_IMG_PATH = INI_CONFIG["upload_image"]["image_upload_path"]
+    IMAGE_HOST = INI_CONFIG["upload_image"]["image_uri"]
+
+    # 视频上传路径和URI
+    UPLOAD_VIDEO_PATH = INI_CONFIG["upload_video"]["video_upload_path"]
+    VIDEO_HOST = INI_CONFIG["upload_video"]["video_uri"]
+
     @staticmethod
     def init_app(app):
         # 配置SQLAlchemy
         DevelopConfig.config_sqlalchemy(app)
+        # 配置Memcached服务器
+        DevelopConfig.config_memcached(app)
 
     @staticmethod
     def config_sqlalchemy(app):
@@ -62,3 +78,4 @@ class DevelopConfig(BaseConfig):
             if server:
                 memcached.append(server)
         app.config["CACHE_MEMCACHED_SERVERS"] = memcached
+

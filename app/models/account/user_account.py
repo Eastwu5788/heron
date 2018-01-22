@@ -7,6 +7,8 @@ class UserAccountModel(db.Model, BaseModel):
     __bind_key__ = "a_account"
     __tablename__ = "user_account"
 
+    __fillable__ = ["id", "mobile", "country", "password"]
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(30), default="")
 
@@ -39,3 +41,20 @@ class UserAccountModel(db.Model, BaseModel):
         if result:
             cache.set(cache_key, result, cache_time)
         return result
+
+    @staticmethod
+    def query_account_by_user_id(user_id):
+        """
+        根据user_id查找用户账户
+        主键查找，不需要缓存
+        """
+        return UserAccountModel.query.filter_by(id=user_id, status=1).first()
+
+    @staticmethod
+    def update_account_password(user_id, mobile, country, password):
+        """
+        更新用户账户的密码
+        """
+        UserAccountModel.query.filter_by(id=user_id).update(dict(password=password))
+        UserAccountModel.query_account_by_mobile(mobile, country, refresh=True)
+        db.session.commit()

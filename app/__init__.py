@@ -37,6 +37,15 @@ def create_app(config_name):
     from app.modules.passport import passport
     app.register_blueprint(passport, url_prefix="/passport")
 
+    from app.modules.user import user
+    app.register_blueprint(user, url_prefix="/user")
+
+    from app.modules.social import social
+    app.register_blueprint(social, url_prefix="/social")
+
+    from app.modules.common import common
+    app.register_blueprint(common, url_prefix="/common")
+
     # 注册中间件
     for middle in MIDDLEWARE:
         if issubclass(middle, BaseMiddleWare):

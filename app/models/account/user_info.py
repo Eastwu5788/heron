@@ -49,7 +49,7 @@ class UserInfoModel(db.Model, BaseModel):
 
     @staticmethod
     def format_user_info(user, full=False):
-        user_info_dict = user.to_dict()
+        user_info_dict = user.to_dict(filter_params=not full)
         return user_info_dict
 
     @staticmethod

@@ -36,3 +36,19 @@ class ImageModel(db.Model, BaseModel):
     status = db.Column(db.Integer, default=0)
     created_time = db.Column(db.DateTime, default=datetime.datetime.now)
     updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
+    @staticmethod
+    def query_share_image_list(share_id_list):
+        query = ImageModel.query.filter_by(status=1).filter(ImageModel.share_id.in_(share_id_list))
+        image_model_list = query.order_by(ImageModel.image_id.asc()).all()
+
+        result = dict()
+
+        for image_model in image_model_list:
+            ori_arr = result.get(image_model.share_id, None)
+            if not ori_arr:
+                ori_arr = [image_model]
+                result[image_model.share_id] = ori_arr
+            else:
+                ori_arr.append(image_model)
+        return result

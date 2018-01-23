@@ -54,14 +54,17 @@ class UploadImage(object):
         return image_info_list
 
     def save_images(self):
+
         for img_dic in self.images:
             if not img_dic:
                 continue
             self.save_image(img_info=img_dic)
+
         # 提交事务
         db.session.commit()
 
     def save_image(self, img_info):
+
         image = ImageModel()
         image.image_width = img_info["width"]
         image.image_height = img_info["height"]
@@ -74,7 +77,7 @@ class UploadImage(object):
 
         pil_img = img_info["pil_image"]
         if image.mime_type in ("RGBA", "LA"):
-            background = Image.new(pil_img.mode[:-1], pil_img.size, "rgba(255, 255, 255, 0)")
+            background = Image.new(pil_img.mode[:-1], pil_img.size, "#ffffff")
             background.paste(pil_img, pil_img.split()[-1])
             pil_img = background
 
@@ -131,8 +134,10 @@ class UploadImage(object):
                 img = img.filter(ImageFilter.GaussianBlur(radius=4))
                 img = img.filter(ImageFilter.MedianFilter)
                 img.save(full_path, "jpeg")
+
         # 添加对象到数据库session中
         db.session.add(image)
+        img_info["image"] = image
 
     @staticmethod
     def format_image(image):

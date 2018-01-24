@@ -17,3 +17,19 @@ class BaseModel(object):
             result[c.name] = getattr(self, c.name, None)
 
         return result
+
+    def format_model(self, attr_list=list()):
+        result = dict()
+
+        for attr in attr_list:
+            if not attr:
+                continue
+
+            if not hasattr(self, attr):
+                result[attr] = None
+                continue
+
+            result[attr] = getattr(self, attr, None)
+
+        return result
+

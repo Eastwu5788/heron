@@ -105,7 +105,6 @@ class IndexHandler(BaseHandler):
 
         share_info = ShareModel.format_share_model([share])
 
-
         return json_success_response(share_info)
 
     def update_image(self, images, share, img_type=10):

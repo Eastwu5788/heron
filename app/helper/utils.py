@@ -43,7 +43,6 @@ def array_column_key(array=list(), column=""):
         value = None
 
         if isinstance(obj, dict):
-            print("dict", obj)
             value = obj.get(column, None)
 
         elif isinstance(obj, object):

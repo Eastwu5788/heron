@@ -34,41 +34,21 @@ class SocialMetaModel(db.Model, BaseModel):
             social_meta = SocialMetaModel()
             social_meta.user_id = user_id
             db.session.add(social_meta)
+            db.session.commit()
 
-        # 修改动态数量
-        if "share" in params:
-            if meta_add:
-                social_meta.share += 1
-            else:
-                social_meta.share -= 1
+        for attr in params:
+            if not attr:
+                continue
 
-        # 修改粉丝数量
-        elif "follower" in params:
-            if meta_add:
-                social_meta.follower += 1
-            else:
-                if social_meta.follower > 0:
-                    social_meta.follower -= 1
-                else:
-                    social_meta.follower = 0
+            value = getattr(social_meta, attr)
+            if not value:
+                value = 0
 
-        # 修改关注数量
-        elif "following" in params:
             if meta_add:
-                social_meta.following += 1
+                value += 1
             else:
-                if social_meta.following > 0:
-                    social_meta.following -= 1
-                else:
-                    social_meta.following = 0
+                value -= 1
 
-        elif "photo" in params:
-            if meta_add:
-                social_meta.photo += 1
-            else:
-                if social_meta.photo > 0:
-                    social_meta.photo -= 1
-                else:
-                    social_meta.photo = 0
+            setattr(social_meta, attr, value)
 
         db.session.commit()

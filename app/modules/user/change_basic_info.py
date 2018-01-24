@@ -43,7 +43,7 @@ class ChangeBasicInfoHandler(BaseHandler):
             "data": 1,
             "message": "更新成功",
         }
-        print(params, result)
+
         return json_success_response(result)
 
 

@@ -1,6 +1,9 @@
 import datetime
-from app import db
+from app import db, cache
 from app.models.base.base import BaseModel
+
+user_social_cache_key = "UserSocialInfoModel:QueryByID:"
+user_social_cache_time = 60*60*24
 
 
 class UserSocialInfoModel(db.Model, BaseModel):
@@ -27,3 +30,18 @@ class UserSocialInfoModel(db.Model, BaseModel):
     about_me = db.Column(db.String(255), default="")
 
     updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
+    @staticmethod
+    def query_user_social_info(user_id, refresh=False):
+        cache_key = user_social_cache_key + str(user_id)
+
+        if not refresh:
+            result = cache.get(cache_key)
+            if result:
+                return result
+
+        result = UserSocialInfoModel.query.filter_by(user_id=user_id).first()
+        if result:
+            cache.set(cache_key, result, user_social_cache_time)
+
+        return result

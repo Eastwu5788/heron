@@ -1,6 +1,9 @@
 import datetime
 from app.models.base.base import BaseModel
-from app import db
+from app import db, cache
+
+cache_image_id_key = "Social:ImageModel:Query:ID:"
+cache_image_id_time = 60*60*24
 
 
 class ImageModel(db.Model, BaseModel):
@@ -52,3 +55,46 @@ class ImageModel(db.Model, BaseModel):
             else:
                 ori_arr.append(image_model)
         return result
+
+    @staticmethod
+    def query_image_by_id(img_id, refresh=False):
+        cache_key = cache_image_id_key + str(img_id)
+
+        if not refresh:
+            result = cache.get(cache_key)
+            if result:
+                return result
+
+        model = ImageModel.query.filter_by(image_id=img_id, status=1).first()
+        if model:
+            cache.set(cache_key, model, cache_image_id_time)
+
+        return model
+
+    @staticmethod
+    def format_image_model(img_model_list=list(), size='o'):
+        result = list()
+
+        if not img_model_list:
+            return result
+
+        for item in img_model_list:
+            item_dic = {
+                "width": item.image_width,
+                "height": item.image_height,
+                "url": ImageModel.generate_image_url(item, size=size)
+            }
+            result.append(item_dic)
+
+        return result
+
+    @staticmethod
+    def generate_image_url(img_model, size='o'):
+        from heron import app
+        url = app.config["IMAGE_HOST"]
+
+        attr = "image_" + size
+        if hasattr(img_model, attr):
+            url += getattr(img_model, attr)
+
+        return url

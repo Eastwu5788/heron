@@ -36,41 +36,20 @@ class ShareMetaModel(db.Model, BaseModel):
             share_meta.user_id = user_id
 
             db.session.add(share_meta)
+            db.session.commit()
 
-        # 点击
-        if "hit" in params:
+        for attr in params:
+            if not attr:
+                continue
+
+            value = getattr(share_meta, attr)
+            if not value:
+                value = 0
+
             if meta_add:
-                share_meta.hit += 1
+                setattr(share_meta, attr, value+1)
             else:
-                share_meta.hit -= 1
-        # 点击（只增不减）
-        elif "click" in params:
-            if meta_add:
-                share_meta.click += 1
-        # 点赞
-        elif "like" in params:
-            if meta_add:
-                share_meta.like += 1
-            else:
-                share_meta.like -= 1
-        # 不喜欢
-        elif "dislike" in params:
-            if meta_add:
-                share_meta.dislike += 1
-            else:
-                share_meta.dislike -= 1
-        # 评论
-        elif "comment" in params:
-            if meta_add:
-                share_meta.comment += 1
-            else:
-                share_meta.comment -= 1
-        # 举报
-        elif "report" in params:
-            if meta_add:
-                share_meta.report += 1
-            else:
-                share_meta.report -= 1
+                setattr(share_meta, attr, value-1)
 
         db.session.commit()
 

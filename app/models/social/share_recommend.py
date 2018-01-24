@@ -1,4 +1,5 @@
 import datetime
+from sqlalchemy import or_, and_
 from app.models.base.base import BaseModel
 from app import db
 
@@ -32,3 +33,34 @@ class ShareRecommendModel(db.Model, BaseModel):
 
         db.session.add(self)
         db.session.commit()
+
+    @staticmethod
+    def query_share_recommend_id_list(position=0, user_id=0, last_share_id=0):
+        """
+        查询动态推荐的内容
+        :param position: 推荐的位置
+        :param user_id: 访问者id
+        :param last_share_id: 最后一条动态id
+        """
+        query = ShareRecommendModel.query.with_entities(ShareRecommendModel.share_id).filter(
+            or_(
+              and_(ShareRecommendModel.status == 1),
+              and_(ShareRecommendModel.status == 3, ShareRecommendModel.user_id == user_id)
+            ),
+            ShareRecommendModel.position == position,
+        )
+
+        if last_share_id:
+            last_model = ShareRecommendModel.query.filter_by(share_id=last_share_id).first()
+            if last_model:
+                query = query.filter(ShareRecommendModel.id < last_model.id)
+
+        result = query.order_by(ShareRecommendModel.id.desc()).all()
+
+        result_list = []
+        for arr in result:
+            if not arr:
+                continue
+            result_list.append(arr[0])
+
+        return result_list

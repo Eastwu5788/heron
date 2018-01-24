@@ -50,6 +50,16 @@ class UserInfoModel(db.Model, BaseModel):
     @staticmethod
     def format_user_info(user, full=False):
         user_info_dict = user.to_dict(filter_params=not full)
+
+        if not user.avatar:
+            user_info_dict["avatar"] = ""
+            user_info_dict["big_avatar"] = ""
+        else:
+            from app.models.social.image import ImageModel
+            img = ImageModel.query_image_by_id(user.avatar)
+            user_info_dict["avatar"] = ImageModel.generate_image_url(img, size='b')
+            user_info_dict["big_avatar"] = ImageModel.generate_image_url(img, size='f')
+
         return user_info_dict
 
     @staticmethod
@@ -81,3 +91,47 @@ class UserInfoModel(db.Model, BaseModel):
         except:
             db.session.rollback()
             return False
+
+    @staticmethod
+    def calculate_ok_percent(user_id):
+        from app.models.account.user_social_info import UserSocialInfoModel
+        from app.models.account.user_personal_info import UserPersonalInfoModel
+
+        user_info = UserInfoModel.query_user_model_by_id(user_id)
+        social_info = UserSocialInfoModel.query_user_social_info(user_id)
+        personal_info = UserPersonalInfoModel.query_personal_info_by_user_id(user_id)
+
+        percent = 0
+
+        # 检查头像是否完善
+        if user_info.avatar:
+            percent += 24
+
+        if user_info.nickname:
+            percent += 12
+
+        if user_info.gender:
+            percent += 8
+
+        user_social_info = ["vocation_name", "school_name", "live_region_name", "language", "emotional_state"]
+        for attr in user_social_info:
+            if not social_info:
+                continue
+
+            value = getattr(social_info, attr, None)
+            if not value:
+                continue
+
+            percent += 8
+
+        user_personal_info = ["age", "star_sign"]
+        for attr in user_personal_info:
+            if not personal_info:
+                continue
+            value = getattr(personal_info, attr, None)
+            if not value:
+                continue
+
+            percent += 8
+
+        return percent if percent <= 100 else 100

@@ -1,6 +1,9 @@
 import datetime
-from app import db
+from app import db, cache
 from app.models.base.base import BaseModel
+
+user_personal_info_cache_key = "UserPersonalInfoModel:QueryByID:"
+user_personal_info_cache_time = 60*60*24
 
 
 class UserPersonalInfoModel(db.Model, BaseModel):
@@ -18,3 +21,18 @@ class UserPersonalInfoModel(db.Model, BaseModel):
     waist = db.Column(db.Integer, default=0)
     hips = db.Column(db.Integer, default=0)
     updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
+    @staticmethod
+    def query_personal_info_by_user_id(user_id, refresh=False):
+        cache_key = user_personal_info_cache_key + str(user_id)
+
+        if not refresh:
+            result = cache.get(cache_key)
+            if result:
+                return result
+
+        result = UserPersonalInfoModel.query.filter_by(user_id=user_id).first()
+        if result:
+            cache.set(cache_key, result, user_personal_info_cache_time)
+
+        return result

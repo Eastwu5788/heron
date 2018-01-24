@@ -103,10 +103,10 @@ class IndexHandler(BaseHandler):
         # 创建首页推荐数据
         ShareRecommendModel(share.share_id, share.user_id, position=2, status=2)
 
-        share_info = ShareModel.format_share_model(share)
+        share_info = ShareModel.format_share_model([share])
 
 
-        return json_success_response()
+        return json_success_response(share_info)
 
     def update_image(self, images, share, img_type=10):
         for img in images:

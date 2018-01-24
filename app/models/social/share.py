@@ -3,6 +3,7 @@ from app import db
 from app.models.base.base import BaseModel
 from app.models.social.share_meta import ShareMetaModel
 from app.models.social.image import ImageModel
+from app.models.social.like import LikeModel
 from app.helper.utils import *
 
 # 线上版本的类型列表
@@ -45,7 +46,7 @@ class ShareModel(db.Model, BaseModel):
         """
         query = ShareModel.query.filter(ShareModel.share_id.in_(share_id_list), ShareModel.type_id.in_(share_type_list))
         query.filter(ShareModel.status.in_(status_private))
-        result = query.all()
+        result = query.order_by(ShareModel.share_id.desc()).all()
         if not result:
             result = []
         return result
@@ -70,7 +71,6 @@ class ShareModel(db.Model, BaseModel):
         share_meta_dict = array_column_key(share_meta_list, "share_id")
 
         img_model_dict = ImageModel.query_share_image_list(share_id_list)
-        print(img_model_dict)
 
         # 逐条格式化
         for share_model in share_info_list:
@@ -81,14 +81,21 @@ class ShareModel(db.Model, BaseModel):
             share_dic["comment_count"] = share_meta.comment if share_meta else 0
             share_dic["click"] = share_meta.click if share_meta else 0
 
-            share_dic["like_list"] = []
-
+            # 格式化用户信息
             from app.models.account.user_info import UserInfoModel
             user_model = UserInfoModel.query_user_model_by_id(share_model.user_id)
             share_dic["user_info"] = UserInfoModel.format_user_info(user_model)
 
-            share_dic["image"] = {}
+            # 格式化图片信息
+            img_model_list = img_model_dict.get(share_model.share_id, None)
+            share_dic["image"] = {
+                "big": ImageModel.format_image_model(img_model_list, size='f'),
+                "small": ImageModel.format_image_model(img_model_list, size='c'),
+            }
 
+            share_dic["like_list"] = LikeModel.query_like_list(share_model.share_id, limit=5)
+
+            # 删除无用数据
             del share_dic["data"]
 
             result_list.append(share_dic)

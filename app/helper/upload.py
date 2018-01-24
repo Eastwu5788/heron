@@ -2,7 +2,6 @@ import datetime
 import os
 import time
 import hashlib
-from tempfile import SpooledTemporaryFile
 from flask import request
 
 from PIL import Image, ImageFilter

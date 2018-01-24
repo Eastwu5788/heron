@@ -41,6 +41,17 @@ class ImageModel(db.Model, BaseModel):
     updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     @staticmethod
+    def query_image_by_image_id_list(image_id_list=list()):
+        if not image_id_list:
+            return []
+
+        result = ImageModel.query.filter(ImageModel.image_id.in_(image_id_list)).all()
+        if not result:
+            result = []
+
+        return result
+
+    @staticmethod
     def query_share_image_list(share_id_list):
         query = ImageModel.query.filter_by(status=1).filter(ImageModel.share_id.in_(share_id_list))
         image_model_list = query.order_by(ImageModel.image_id.asc()).all()

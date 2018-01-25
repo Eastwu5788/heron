@@ -52,3 +52,17 @@ class SocialMetaModel(db.Model, BaseModel):
             setattr(social_meta, attr, value)
 
         db.session.commit()
+
+    @staticmethod
+    def query_social_meta_info(user_id):
+        """
+        查询用户社交信息，可以批量查询
+        """
+        if isinstance(user_id, list):
+            result = SocialMetaModel.query.filter(SocialMetaModel.user_id.in_(user_id)).all()
+            if not result:
+                result = []
+        else:
+            result = SocialMetaModel.query.filter_by(user_id=user_id).first()
+
+        return result

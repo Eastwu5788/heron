@@ -102,5 +102,39 @@ class ShareModel(db.Model, BaseModel):
 
         return result_list
 
+    @staticmethod
+    def query_recent_share_photo(user_id, login_user, limit=3):
+        """
+        查询最近发布的三条动态的图片
+        """
+        query = ShareModel.query.filter_by(user_id=user_id, type_id=10)
+        if user_id == login_user:
+            query = query.filter(ShareModel.status.in_(status_private))
+        else:
+            query = query.filter(ShareModel.status.in_(status_public))
+
+        result = query.order_by(ShareModel.share_id.desc()).limit(limit).all()
+
+        if not result:
+            return []
+
+        share_ids_list = array_column(result, "share_id")
+
+        query = ImageModel.query.filter_by(status=1).filter(ImageModel.share_id.in_(share_ids_list))
+        image_list = query.order_by(ImageModel.image_id.desc()).limit(limit).all()
+        if not image_list:
+            image_list = []
+
+        result = list()
+        for image_model in image_list:
+            url = ImageModel.generate_image_url(image_model, 'b')
+            if url:
+                result.append(url)
+
+        return result
+
+
+
+
 
 

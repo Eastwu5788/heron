@@ -18,6 +18,7 @@ from app.models.account.user_sale_account import UserSaleAccountModel
 from app.models.account.user_info import UserInfoModel
 from app.models.account.user_id_relation import UserIdRelationModel
 from app.models.account.user_account import UserAccountModel
+from app.models.core.open_log import OpenLogModel
 
 
 class IndexHandler(BaseHandler):
@@ -91,6 +92,17 @@ class IndexHandler(BaseHandler):
 
         if not result["password"]:
             result["perfect_info_pwd"] = 1
+
+        # 日活统计
+        open_log = OpenLogModel()
+        open_log.user_id = result.get("user_id", 0)
+        open_log.udid = result.get("udid", "")
+        open_log.access_token = result.get("access_token", "")
+        open_log.device_type = result.get("device_type", "")
+        open_log.version = result.get("version", "")
+        open_log.type = 3
+        db.session.add(open_log)
+        db.session.commit()
 
         return json_success_response(result)
 

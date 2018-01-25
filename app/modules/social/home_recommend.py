@@ -13,6 +13,7 @@ from app.models.account.user_info import UserInfoModel
 from app.helper.response import *
 from app.helper.utils import array_column_key, array_column
 
+
 class HomeRecommendHandler(BaseHandler):
 
     home_top_page_count = 20
@@ -32,29 +33,35 @@ class HomeRecommendHandler(BaseHandler):
 
     @filter_params(get=rule)
     def get(self, params):
-        user_id = g.account["user_id"]
-
+        # 查询首页顶部用户
         if params["position"] == 1:
             return self.home_top_user_request(params)
 
+        # 查询首页下部推荐用户中的活跃用户
         active_user_list = []
-        # 加载更多时，先读取缓存中的活跃用户
+
+        # 查询所有缓存的活跃用户
         if params["refresh"] == 0 and (params["last_id"] != 0 or params["offset"] != 0):
             cache_user_list = cache.get(self.home_active_user_cache_key)
             if cache_user_list:
                 active_user_list = cache_user_list
 
+        # 如果没有缓存的活跃用户，则查询数据库，并重新缓存结果
         if not active_user_list and params["refresh"] == 0:
             active_user_list = HomeRecommendModel.query_home_active_users(24, params)
             if active_user_list:
                 cache.set(self.home_active_user_cache_key, active_user_list, self.home_active_user_cache_time)
 
+        # 从缓存的活跃用户中分页获取要显示的用户列表
         offset = params["offset"]
         if offset == 0:
             result_list = active_user_list[params["last_id"]: offset+self.per_page]
+            if not result_list:
+                result_list = []
         else:
             result_list = []
 
+        # 如果缓存用户不足一页，则从home_recommend表中随机查询其它的用户
         if result_list and len(result_list) < self.per_page:
             params["active_ids"] = array_column(result_list, "user_id")
 
@@ -71,13 +78,13 @@ class HomeRecommendHandler(BaseHandler):
         else:
             result_list_add = []
 
-        home_recommend = result_list_add + result_list
+        # 合并活跃用户和普通用户
+        home_recommend = result_list + result_list_add
+
         if not home_recommend:
             return json_success_response([])
 
-        return json_success_response([])
-
-
+        return json_success_response(HomeRecommendHandler.format_home_users(home_recommend))
 
     def home_top_user_request(self, params):
         # 查询首页推荐的所有用户
@@ -114,7 +121,7 @@ class HomeRecommendHandler(BaseHandler):
             item["user_info"] = UserInfoModel.format_user_info(user_info)
 
             image_model = image_list.get(user.user_id, None)
-            item["cover"] = ImageModel.format_image_model(image_model, "c") if image_model else ""
+            item["cover"] = ImageModel.generate_image_url(image_model, "c") if image_model else ""
             item["last_id"] = 0
             item["offset"] = 0
             item["relation_type"] = 0
@@ -124,4 +131,4 @@ class HomeRecommendHandler(BaseHandler):
         return result
 
 
-social.add_url_rule("/social/gethomerecommend/random", view_func=HomeRecommendHandler.as_view("recommend_random"))
+social.add_url_rule("/gethomerecommend/random", view_func=HomeRecommendHandler.as_view("recommend_random"))

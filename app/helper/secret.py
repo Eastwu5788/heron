@@ -45,3 +45,19 @@ def generate_request_sign(params, salt=""):
 
     # 生成签名值
     return md5(result_str)
+
+
+def generate_password(user_id=0, password=""):
+
+    from config.setting import SECRET_KEY
+
+    string = SECRET_KEY + password + str(user_id)
+    sha512 = hashlib.sha512()
+    sha512.update(bytes(string, encoding="utf-8"))
+    new_password = sha512.hexdigest()
+    return new_password[:64]
+
+
+def check_password(user_id=0, password="", pwd=""):
+    user_pwd = generate_password(user_id, password)
+    return user_pwd == pwd

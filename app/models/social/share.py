@@ -1,4 +1,5 @@
 import datetime
+from sqlalchemy import or_, and_
 from app import db
 from app.models.base.base import BaseModel
 from app.models.social.share_meta import ShareMetaModel
@@ -133,8 +134,45 @@ class ShareModel(db.Model, BaseModel):
 
         return result
 
+    @staticmethod
+    def query_user_share_list(user_id_list=list(), login_user_id=0, limit=20, last_share_id=0, sort=0):
+        """
+        查询某些人的动态列表
+        :param user_id_list: 需要查询的用户列表
+        :param login_user_id: 当前登录用户
+        :param limit: 分页数量
+        :param last_share_id:最后一条动态id，用于分页
+        :param sort: 排序
+        :return: 查询结果
+        """
+        # 计算上自己的动态
+        if login_user_id > 0:
+            # 只查询自己的
+            if not user_id_list:
+                query = ShareModel.query.filter_by(user_id=login_user_id).filter(ShareModel.status.in_(status_private))
+            # 同时查询自己和别人的
+            else:
+                query = ShareModel.query.filter(or_(
+                    and_(ShareModel.user_id == login_user_id, ShareModel.status.in_(status_private)),
+                    and_(ShareModel.user_id.in_(user_id_list), ShareModel.status.in_(status_public))
+                ))
+        # 只查询别人的动态
+        else:
+            if isinstance(user_id_list, list):
+                query = ShareModel.query.filter(ShareModel.user_id.in_(user_id_list), ShareModel.parent_id == 0)
+            else:
+                query = ShareModel.query.filter_by(user_id=user_id_list, parent_id=0)
 
+            query = query.filter(ShareModel.status.in_(status_public))
 
+        query = query.filter(ShareModel.user_id > 0)
+        if last_share_id > 0:
+            query = query.filter(ShareModel.share_id < last_share_id)
 
+        if sort > 0:
+            query = query.order_by(ShareModel.sort.desc())
+        result = query.order_by(ShareModel.share_id.desc()).limit(limit).all()
+        if not result:
+            return result
 
-
+        return result

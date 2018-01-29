@@ -56,3 +56,18 @@ def array_column_key(array=list(), column=""):
         result_dict[value] = obj
 
     return result_dict
+
+
+def array_column_index(array=list(), index=0):
+
+    result = []
+
+    if not array:
+        return result
+
+    for item in array:
+        value = item[index]
+        if value:
+            result.append(value)
+
+    return result

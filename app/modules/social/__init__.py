@@ -5,3 +5,4 @@ social = Blueprint("social", __name__)
 from . import publish
 from . import share_recommend
 from . import home_recommend
+from . import share_list

@@ -1,12 +1,13 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cache import Cache
-
+from .modules.vendor.flask_redis import Redis
 from config.setting import config, MIDDLEWARE
 from .middleware.base_middleware import BaseMiddleWare
 
 db = SQLAlchemy()
 cache = Cache()
+redis = Redis()
 
 
 def create_app(config_name):
@@ -26,6 +27,7 @@ def create_app(config_name):
     # 初始化SQLAlchemy数据库
     db.init_app(app)
     cache.init_app(app)
+    redis.init_app(app)
 
     # 注册蓝图 TODO: 蓝图写到ini配置文件中
     from app.modules.build import build

@@ -24,7 +24,7 @@ class IndexHandler(BaseHandler):
         # 根据动态id查询动态详细信息
         share_list = ShareModel.query_share_info_list(share_id_list)
         # 格式化动态
-        result = ShareModel.format_share_model(share_list, account=0)
+        result = ShareModel.format_share_model(share_list, account=g.account["user_id"])
         # 返回结果
         return json_success_response(result)
 

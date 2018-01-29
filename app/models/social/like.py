@@ -28,6 +28,11 @@ class LikeModel(db.Model, BaseModel):
         return LikeModel.format_like_info(result)
 
     @staticmethod
+    def query_like_model(user_id, share_id):
+
+        return LikeModel.query.filter_by(user_id=user_id, share_id=share_id).first()
+
+    @staticmethod
     def format_like_info(like_model_list=list()):
 
         result = []

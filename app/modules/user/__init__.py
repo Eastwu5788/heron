@@ -6,3 +6,6 @@ from . import change_basic_info
 from . import user_info
 from . import user_basic_info
 from . import follow_share_list
+from . import add_follow
+from . import friends
+from . import image

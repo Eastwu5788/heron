@@ -54,6 +54,10 @@ class ShareMetaModel(db.Model, BaseModel):
         db.session.commit()
 
     @staticmethod
+    def query_share_meta_model(share_id):
+        return ShareMetaModel.query.filter_by(share_id=share_id).first()
+
+    @staticmethod
     def query_share_meta_model_list(share_id_list=list(), auto_format=True):
         if not share_id_list:
             return []

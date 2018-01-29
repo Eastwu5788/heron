@@ -19,6 +19,8 @@ from app.models.social.share import ShareModel
 from app.models.core.open_log import OpenLogModel
 from app.models.social.visitor_record import VisitorRecordModel
 from app.models.base.redis import RedisModel
+from app.models.social.follow import FollowModel
+
 from . import user
 
 
@@ -70,7 +72,7 @@ class IndexHandler(BaseHandler):
         result["share_num"] = social_meta_info.share if social_meta_info else 0
         result["follow_num"] = social_meta_info.following if social_meta_info else 0
         result["fans_num"] = social_meta_info.follower if social_meta_info else 0
-        result["follow_status"] = 1
+        result["follow_status"] = FollowModel.query_relation_to_user(g.account["user_id"], params["user_id"])
         result["album"] = []
 
         social_page_info = SocialPageModel.query_social_page_model(params["user_id"])

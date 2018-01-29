@@ -23,10 +23,17 @@ INI_MEMCACHED.read(os.path.join(basedir, 'memcached.ini'))
 INI_CONFIG = configparser.ConfigParser()
 INI_CONFIG.read(os.path.join(basedir, "config.ini"))
 
+INI_REDIS = configparser.ConfigParser()
+INI_REDIS.read(os.path.join(basedir, "redis.ini"))
+
 
 class DevelopConfig(BaseConfig):
     # Open Debug mode
     DEBUG = True
+
+    # Redis 配置（TODO: 集群）
+    CACHE_REDIS_HOST = INI_REDIS["redis"]["host"]
+    CACHE_REDIS_PORT = INI_REDIS["redis"]["port"]
 
     # 短信平台云片的API KEY
     SMS_YP_API_KEY = INI_CONFIG["sms_yp"]["api_key"]

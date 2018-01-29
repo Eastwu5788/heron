@@ -16,7 +16,7 @@ from app.models.account.user_personal_info import UserPersonalInfoModel
 from app.models.account.aha_account import AhaAccountModel
 from app.models.account.user_social_info import UserSocialInfoModel
 from app.models.account.user_id_relation import UserIdRelationModel
-from app.helper.secret import md5
+from app.helper.secret import generate_password
 
 
 class RegisterHandler(BaseHandler):
@@ -95,7 +95,7 @@ class GeneratePasswordHandler(BaseHandler):
         if not re.match(r"[a-zA-Z0-9]{6}", password):
             return json_fail_response(2018)
 
-        password = md5(password)
+        password = generate_password(account["user_id"], password)
         UserAccountModel.update_account_password(account["user_id"], account["mobile"], account["country"], password)
         return json_success_response()
 

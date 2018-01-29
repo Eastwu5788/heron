@@ -1,5 +1,5 @@
 from flask import g
-
+from app import redis
 from app.modules.vendor.pre_request.flask import filter_params
 from app.modules.vendor.pre_request.filter_rules import Rule
 
@@ -17,6 +17,8 @@ from app.models.account.user_location import UserLocationModel
 from app.models.account.aha_account import AhaAccountModel
 from app.models.social.share import ShareModel
 from app.models.core.open_log import OpenLogModel
+from app.models.social.visitor_record import VisitorRecordModel
+from app.models.base.redis import RedisModel
 from . import user
 
 
@@ -42,11 +44,10 @@ class MeHandler(BaseHandler):
         invite_code = UserInviteCodeModel.query_user_invite_code(user_id)
         result["invite_url"] = user_invite_url + invite_code
 
-        result["new_visitor"] = 0
+        result["new_visitor"] = RedisModel.query_new_message(user_id, RedisModel.new_visitor)
         result["follow_add"] = 0
 
         result["wechat_info"] = {}
-
         return json_success_response(result)
 
 
@@ -112,6 +113,10 @@ class IndexHandler(BaseHandler):
             result["last_login"] = time.time() - time.mktime(last_login.created_time.timetuple())
 
         # 插入访客记录
+        if g.account["user_id"] != 0 and g.account["user_id"] != params["user_id"]:
+            RedisModel.add_new_message(params["user_id"], RedisModel.new_visitor)
+            VisitorRecordModel(user_id=params["user_id"], visitor_user_id=g.account["user_id"])
+
         return json_success_response(result)
 
     @staticmethod

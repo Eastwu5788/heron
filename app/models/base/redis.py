@@ -5,6 +5,8 @@ class RedisModel(object):
 
     new_visitor = "New:Visitor:"
 
+    new_follow = "New:Follow:Add:"
+
     @staticmethod
     def add_new_message(user_id, message):
         """

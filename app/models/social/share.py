@@ -53,6 +53,10 @@ class ShareModel(db.Model, BaseModel):
         return result
 
     @staticmethod
+    def query_share_model(share_id):
+        return ShareModel.query.filter_by(share_id=share_id).first()
+
+    @staticmethod
     def format_share_model(share_info_list=list(), account=0):
         """
         统一的格式化动态模型
@@ -73,11 +77,14 @@ class ShareModel(db.Model, BaseModel):
 
         img_model_dict = ImageModel.query_share_image_list(share_id_list)
 
+        like_status_list = ShareModel.query_share_check_list(account, share_id_list)
+
         # 逐条格式化
         for share_model in share_info_list:
             share_dic = share_model.to_dict()
 
             share_meta = share_meta_dict.get(share_model.share_id, None)
+            share_dic["like_status"] = 1 if like_status_list.get(share_model.share_id, None) else 0
             share_dic["like_count"] = share_meta.like if share_meta else 0
             share_dic["comment_count"] = share_meta.comment if share_meta else 0
             share_dic["click"] = share_meta.click if share_meta else 0
@@ -102,6 +109,17 @@ class ShareModel(db.Model, BaseModel):
             result_list.append(share_dic)
 
         return result_list
+
+    @staticmethod
+    def query_share_check_list(user_id, share_id_list):
+        if not share_id_list or not user_id:
+            return {}
+
+        like_model_list = LikeModel.query.filter_by(user_id=user_id, status=1).filter(LikeModel.share_id.in_(share_id_list)).all()
+        if not like_model_list:
+            like_model_list = []
+
+        return array_column_key(like_model_list, "share_id")
 
     @staticmethod
     def query_recent_share_photo(user_id, login_user, limit=3):

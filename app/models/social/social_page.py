@@ -17,7 +17,7 @@ class SocialPageModel(db.Model, BaseModel):
     feeling = db.Column(db.String(200), default="")
     top_share_id = db.Column(db.Integer, default=0)
     album_show = db.Column(db.Integer, default=0)
-    status = db.Column(db.Integer, default=0)
+    status = db.Column(db.Integer, default=1)
     created_time = db.Column(db.DateTime, default=datetime.datetime.now)
     updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 

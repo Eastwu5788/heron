@@ -2,6 +2,9 @@ import datetime
 from app import db, cache
 from app.models.base.base import BaseModel
 
+from app.models.social.album import AlbumModel
+from app.models.social.image import ImageModel
+
 user_info_cache_key_by_id = "UserInfoModel:QueryByID:"
 
 
@@ -48,6 +51,36 @@ class UserInfoModel(db.Model, BaseModel):
         return user_info
 
     @staticmethod
+    def query_user_album(user_id):
+        result = dict()
+        album = AlbumModel.query_album_by_user_id(user_id)
+        if not album:
+            return result
+
+        image_model_list = ImageModel.query_album_image_list(user_id, album.id)
+
+        small_list = []
+        big_list = []
+        for image_model in image_model_list:
+            small = big = dict()
+
+            small["url"] = ImageModel.generate_image_url(image_model, 'b')
+            small["width"] = 240
+            small["height"] = 240
+            small["image_id"] = image_model.image_id
+            small_list.append(small)
+
+            big["url"] = ImageModel.generate_image_url(image_model, 'f')
+            big["width"] = 800
+            big["height"] = 800
+            big["image_id"] = image_model.image_id
+            big_list.append(big)
+        result["small"] = small_list
+        result["big"] = big_list
+
+        return result
+
+    @staticmethod
     def format_user_info(user, full=False):
         user_info_dict = user.to_dict(filter_params=not full)
 
@@ -69,7 +102,7 @@ class UserInfoModel(db.Model, BaseModel):
         :param nickname: 昵称
         :param user_id: 用户自己的id
         """
-        result = UserInfoModel.query.filter_by(status=1).filter(user_id != user_id).filter(nickname=nickname).first()
+        result = UserInfoModel.query.filter_by(nickname=nickname, status=1).filter(UserInfoModel.user_id != user_id).first()
         if result:
             return True
         return False

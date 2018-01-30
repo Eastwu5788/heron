@@ -11,3 +11,4 @@ from . import share_detail
 from . import like_list
 from . import add_comment
 from . import get_comment
+from . import chat

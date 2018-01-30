@@ -36,3 +36,21 @@ class UserPersonalInfoModel(db.Model, BaseModel):
             cache.set(cache_key, result, user_personal_info_cache_time)
 
         return result
+
+    @staticmethod
+    def update_user_personal_info(user_id, params):
+        """
+        更新用户信息
+        :param user_id: 需要更新的用户ID
+        :param params: 更新的参数
+        """
+        if not user_id or not params:
+            return False
+
+        UserPersonalInfoModel.query.filter_by(user_id=user_id).update(params)
+        try:
+            db.session.commit()
+            return True
+        except:
+            db.session.rollback()
+            return False

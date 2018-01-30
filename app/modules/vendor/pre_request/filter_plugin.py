@@ -127,6 +127,11 @@ class TypeFilter(BaseFilter):
             return False
         else:
             try:
+                if self.value is None:
+                    if self.rule.direct_type == int:
+                        self.value = 0
+                    elif self.rule.direct_type == str:
+                        self.value = ""
                 return self.rule.direct_type(self.value)
             except ValueError:
                 raise ParamsValueError(self.error_code, filter=self)
@@ -140,6 +145,8 @@ class EnumFilter(BaseFilter):
         super(EnumFilter, self).__call__()
 
         if self.rule.enum and self.value not in self.rule.enum:
+            if self.rule.allow_empty and not self.value:
+                return self.value
             raise ParamsValueError(self.error_code, filter=self)
 
         return self.value

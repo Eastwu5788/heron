@@ -7,6 +7,8 @@ class RedisModel(object):
 
     new_follow = "New:Follow:Add:"
 
+    new_comment = "New:Comment:Add:"
+
     @staticmethod
     def add_new_message(user_id, message):
         """
@@ -20,4 +22,7 @@ class RedisModel(object):
     @staticmethod
     def query_new_message(user_id, message):
         cache_key = message + str(user_id)
-        return redis.get(cache_key)
+        result = redis.get(cache_key)
+        if not result:
+            result = 0
+        return result

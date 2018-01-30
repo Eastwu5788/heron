@@ -1,6 +1,8 @@
 from flask import g
 from . import user
 from app.modules.base.base_handler import BaseHandler
+from app.modules.vendor.pre_request.flask import filter_params
+from app.modules.vendor.pre_request.filter_rules import Rule
 from app.models.account.aha_account import AhaAccountModel
 from app.models.account.user_social_info import UserSocialInfoModel
 from app.models.account.user_personal_info import UserPersonalInfoModel
@@ -23,15 +25,16 @@ class IndexHandler(BaseHandler):
         result = dict(result, **aha_account)
 
         # 社交信息
-        filter_params = ["vocation_name", "school_name", "language", "emotional_state", "live_region_name"]
+        params = ["vocation_name", "school_name", "language", "emotional_state", "live_region_name"]
         user_social = UserSocialInfoModel.query_user_social_info(user_id)
-        user_social_dic = user_social.format_model(filter_params)
+        user_social_dic = user_social.format_model(params)
+        print(user_social_dic)
         result = dict(result, **user_social_dic)
 
         # 个人信息
-        filter_params = ["weight", "height", "star_sign", "age"]
+        params = ["weight", "height", "star_sign", "age"]
         user_personal_model = UserPersonalInfoModel.query_personal_info_by_user_id(user_id)
-        user_personal_dic = user_personal_model.format_model(filter_params)
+        user_personal_dic = user_personal_model.format_model(params)
         result = dict(result, **user_personal_dic)
 
         # 用户信息
@@ -47,10 +50,35 @@ class IndexHandler(BaseHandler):
             result["orientation"] = social_page_dic.get("orientation", "")
             result["user_banner_cover"] = social_page_dic.get("video_img", "")
 
-        result["album"] = []
+        result["album"] = UserInfoModel.query_user_album(user_id)
 
         return json_success_response(result)
 
 
+class AlbumHandler(BaseHandler):
+
+    rule = {
+        "user_id": Rule(direct_type=int)
+    }
+
+    @filter_params(get=rule)
+    def get(self, params):
+
+        social_page_info = SocialPageModel.query_social_page_model(params["user_id"])
+        result = dict()
+
+        result["user_banner"] = social_page_info.get("cover", "")
+        result["user_banner_type"] = social_page_info.get("cover_type", 0)
+
+        if result["user_banner_type"] == 2:
+            result["orientation"] = social_page_info.get("orientation", "")
+            result["user_banner_cover"] = social_page_info.get("video_img", "")
+
+        result["album"] = UserInfoModel.query_user_album(params["user_id"])
+
+        return result
+
+
 user.add_url_rule("/userbasicinfo/index", view_func=IndexHandler.as_view("userbasic_info_index"))
+user.add_url_rule("/userbasicinfo/getalbum", view_func=IndexHandler.as_view("userbasic_info_get_album"))
 

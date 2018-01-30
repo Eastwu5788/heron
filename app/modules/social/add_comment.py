@@ -10,6 +10,8 @@ from app.models.account.user_info import UserInfoModel
 from app.models.social.share import ShareModel
 from app.models.social.comment import CommentModel
 from app.models.social.share_meta import ShareMetaModel
+from app.models.base.redis import RedisModel
+from app.models.social.comment_relation import CommentRelationModel
 
 from app.helper.response import *
 from app.helper.auth import login_required
@@ -31,6 +33,8 @@ class IndexHandler(BaseHandler):
         share_info = ShareModel.query_share_model(params["share_id"])
         if not share_info:
             return json_fail_response(2405)
+
+        comment_model = None
 
         # 回复某一条评论
         if params["reply_comment_id"]:
@@ -70,6 +74,22 @@ class IndexHandler(BaseHandler):
         if comment.reply_comment_id:
             reply_user_info = UserInfoModel.query_user_model_by_id(comment_model.user_id)
             result["reply_user_info"] = UserInfoModel.format_user_info(reply_user_info)
+
+            # 回复的动态的所有者不是自己
+            if comment_model.user_id != g.account["user_id"]:
+                CommentRelationModel(g.account["user_id"], comment_model.user_id, share_info.share_id,
+                                     comment.comment_id, comment_model.comment_id)
+                RedisModel.add_new_message(comment_model.user_id, RedisModel.new_comment)
+
+        # 动态的主人不是自己
+        if share_info.user_id != g.account["user_id"]:
+            if comment_model and comment_model.user_id == share_info.user_id:
+                pass
+            else:
+                CommentRelationModel(g.account["user_id"], share_info.user_id, share_info.share_id,
+                                     comment.comment_id, params["reply_comment_id"])
+                RedisModel.add_new_message(share_info.user_id, RedisModel.new_comment)
+
         share_meta = ShareMetaModel.query_share_meta_model(params["share_id"])
         result["comment_count"] = share_meta.comment if share_meta else 0
 

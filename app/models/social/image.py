@@ -68,6 +68,14 @@ class ImageModel(db.Model, BaseModel):
         return result
 
     @staticmethod
+    def query_album_image_list(user_id, album_id):
+        query = ImageModel.query.filter_by(user_id=user_id, album_id=album_id, status=1)
+        image_model_list = query.order_by(ImageModel.image_id.desc()).all()
+        if not image_model_list:
+            image_model_list = []
+        return image_model_list
+
+    @staticmethod
     def query_image_by_id(img_id, refresh=False):
         cache_key = cache_image_id_key + str(img_id)
 

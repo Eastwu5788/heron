@@ -45,3 +45,22 @@ class UserSocialInfoModel(db.Model, BaseModel):
             cache.set(cache_key, result, user_social_cache_time)
 
         return result
+
+    @staticmethod
+    def update_user_social_info(user_id, params):
+        """
+        更新用户社交信息
+        :param user_id: 用户id
+        :param params: 更新参数
+        :return: 返回值
+        """
+
+        if not user_id or not params:
+            return False
+
+        UserSocialInfoModel.query.filter_by(user_id=user_id).update(params)
+        try:
+            db.session.commit()
+            return True
+        except:
+            return False

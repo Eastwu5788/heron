@@ -1,5 +1,5 @@
 from flask import g
-from app import redis
+from app import redis, db
 from app.modules.vendor.pre_request.flask import filter_params
 from app.modules.vendor.pre_request.filter_rules import Rule
 
@@ -7,6 +7,7 @@ from app.modules.base.base_handler import BaseHandler
 
 from app.helper.response import *
 from app.helper.auth import login_required
+from app.helper.upload import UploadImage
 
 from app.models.account.user_info import UserInfoModel
 from app.models.account.user_invite_code import UserInviteCodeModel
@@ -20,7 +21,7 @@ from app.models.core.open_log import OpenLogModel
 from app.models.social.visitor_record import VisitorRecordModel
 from app.models.base.redis import RedisModel
 from app.models.social.follow import FollowModel
-
+from app.models.social.image import ImageModel
 from . import user
 
 
@@ -132,5 +133,67 @@ class IndexHandler(BaseHandler):
         return result
 
 
+class ChangeCoverHandler(BaseHandler):
+
+    rule = {
+        "cover_type": Rule(direct_type=int)
+    }
+
+    @login_required
+    @filter_params(post=rule)
+    def post(self, params):
+        img_upload = UploadImage()
+        print(params)
+        if params["cover_type"] == 1:
+            if not img_upload.images:
+                return json_fail_response(2402)
+
+            img_upload.save_images()
+            image_model = img_upload.images[0]["image"]
+            ChangeCoverHandler.change_cover_image(image_model)
+        else:
+            pass
+
+        cover_info = SocialPageModel.query_social_page_model(g.account["user_id"])
+        result = {"user_banner": cover_info.get("cover", ""), "user_banner_type": cover_info.get("cover_type", 0)}
+        if result.get("user_banner_type", 0) == 2:
+            result["orientation"] = cover_info.get("orientation")
+            result["user_banner_cover"] = cover_info.get("video_img", "")
+
+        UserInfoModel.query_user_model_by_id(g.account["user_id"], True)
+        return json_success_response(result)
+
+    @staticmethod
+    def change_cover_image(image_model):
+        """
+        修改封面图片
+        """
+        image_model.user_id = g.account["user_id"]
+
+        UserInfoModel.query.filter_by(user_id=g.account["user_id"], status=1).update({
+            "cover": image_model.image_id,
+            "cover_type": 1,
+        })
+
+        social_page = SocialPageModel.query_social_page_model(g.account["user_id"], auto_format=False)
+        if not social_page:
+            social_page = SocialPageModel()
+            social_page.user_id = g.account["user_id"]
+            social_page.cover = image_model.image_id
+            social_page.cover_type = 1
+
+            db.session.add(social_page)
+        else:
+            social_page.cover = image_model.image_id
+            social_page.cover_type = 1
+
+        db.session.commit()
+
+    @staticmethod
+    def change_cover_video(params):
+        pass
+
+
 user.add_url_rule("/userinfo/me", view_func=MeHandler.as_view("user_info_me"))
 user.add_url_rule("/userinfo/index", view_func=IndexHandler.as_view("user_info_index"))
+user.add_url_rule("/userinfo/changecover", view_func=ChangeCoverHandler.as_view("user_info_change_cover"))

@@ -1,4 +1,5 @@
 from flask import g
+from sqlalchemy import func
 from . import user
 from app import db
 from app.modules.base.base_handler import BaseHandler
@@ -6,11 +7,15 @@ from app.modules.base.base_handler import BaseHandler
 from app.models.account.user_info import UserInfoModel
 from app.models.account.account_data import AccountDataModel
 from app.models.social.image import ImageModel
+from app.models.social.image_data import ImageDataModel
+from app.models.social.social_meta import SocialMetaModel
 
 from app.helper.upload import UploadImage
 from app.helper.response import *
 from app.helper.auth import login_required
 
+
+album_max = 20
 
 class UploadAvatarHandler(BaseHandler):
 
@@ -66,4 +71,32 @@ class UploadAvatarHandler(BaseHandler):
         return json_success_response(result)
 
 
+class UploadPhotoHandler(BaseHandler):
+
+    @login_required
+    def post(self):
+
+        img_uploader = UploadImage()
+        img_count = db.session.query(func.count(ImageModel.image_id)).filter_by(user_id=g.account["user_id"],
+                                                                                status=1).filter(ImageModel.album_id != 0).scalar()
+        photo_count = len(img_uploader.images) + img_count
+        if photo_count > album_max:
+            return json_fail_response(2404)
+
+        img_uploader.save_images()
+
+        result = ImageDataModel.config_photo({
+            "user_id": g.account["user_id"]
+        }, img_uploader.images)
+
+        if result:
+            SocialMetaModel.query.filter_by(user_id=g.account["user_id"]).update({
+                "photo": photo_count
+            })
+
+        UserInfoModel.query_user_model_by_id(g.account["user_id"], True)
+        return json_success_response(result)
+
+
 user.add_url_rule("/image/uploadavatar", view_func=UploadAvatarHandler.as_view("image_upload_avatar"))
+user.add_url_rule("/image/uploadphoto", view_func=UploadPhotoHandler.as_view("image_upload_photo"))

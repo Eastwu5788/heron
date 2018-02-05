@@ -26,3 +26,8 @@ class RedisModel(object):
         if not result:
             result = 0
         return result
+
+    @staticmethod
+    def reset_new_message(user_id, message):
+        cache_key = message + str(user_id)
+        redis.set(cache_key, 0)

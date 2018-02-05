@@ -52,6 +52,16 @@ class ImageModel(db.Model, BaseModel):
         return result
 
     @staticmethod
+    def query_share_images(share_id):
+        if not share_id:
+            return []
+
+        model_list = ImageModel.query.filter_by(share_id=share_id, status=1).order_by(ImageModel.image_id.asc()).all()
+        if not model_list:
+            model_list = []
+        return model_list
+
+    @staticmethod
     def query_share_image_list(share_id_list):
         query = ImageModel.query.filter_by(status=1).filter(ImageModel.share_id.in_(share_id_list))
         image_model_list = query.order_by(ImageModel.image_id.asc()).all()

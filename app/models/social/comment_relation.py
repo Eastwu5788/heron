@@ -35,7 +35,7 @@ class CommentRelationModel(db.Model, BaseModel):
         if last_cid:
             query = query.filter(CommentRelationModel.comment_id < last_cid)
 
-        result = query.order_by(CommentRelationModel.id.desc()).limit(per_page).all()
+        result = query.order_by(CommentRelationModel.id.desc()).order_by(CommentRelationModel.id.desc()).limit(per_page).all()
         if not result:
             result = []
         return result

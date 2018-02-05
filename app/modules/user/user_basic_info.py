@@ -28,7 +28,6 @@ class IndexHandler(BaseHandler):
         params = ["vocation_name", "school_name", "language", "emotional_state", "live_region_name"]
         user_social = UserSocialInfoModel.query_user_social_info(user_id)
         user_social_dic = user_social.format_model(params)
-        print(user_social_dic)
         result = dict(result, **user_social_dic)
 
         # 个人信息

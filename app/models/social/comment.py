@@ -30,6 +30,17 @@ class CommentModel(db.Model, BaseModel):
         return CommentModel.query.filter_by(comment_id=comment_id).first()
 
     @staticmethod
+    def query_comment_list(comment_id_list=list()):
+        if not comment_id_list:
+            return []
+
+        query = CommentModel.query.filter(CommentModel.comment_id.in_(comment_id_list)).filter_by(status=1)
+        result = query.order_by(CommentModel.comment_id.desc()).all()
+        if not result:
+            result = []
+        return result
+
+    @staticmethod
     def query_share_comment_list(share_id, login_user_id=0, last_id=0, per_page=20):
         """
         TODO：待完成

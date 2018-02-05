@@ -1,4 +1,5 @@
 from flask import g
+from sqlalchemy import func
 from app import redis, db
 from app.modules.vendor.pre_request.flask import filter_params
 from app.modules.vendor.pre_request.filter_rules import Rule
@@ -11,6 +12,7 @@ from app.helper.upload import UploadImage
 
 from app.models.account.user_info import UserInfoModel
 from app.models.account.user_invite_code import UserInviteCodeModel
+from app.models.account.user_wechat import UserWeChatModel
 from app.models.social.social_meta import SocialMetaModel
 from app.models.social.social_page import SocialPageModel
 from app.models.coffer.user_profit import UserProfitModel
@@ -22,6 +24,9 @@ from app.models.social.visitor_record import VisitorRecordModel
 from app.models.base.redis import RedisModel
 from app.models.social.follow import FollowModel
 from app.models.social.image import ImageModel
+from app.models.commerce.order_meta import OrderMetaModel
+from app.models.social.wechat_want_buy import WeChatWantBuyModel
+from app.models.social.social_meta import SocialMetaModel
 from . import user
 
 
@@ -50,8 +55,59 @@ class MeHandler(BaseHandler):
         result["new_visitor"] = RedisModel.query_new_message(user_id, RedisModel.new_visitor)
         result["follow_add"] = 0
 
-        result["wechat_info"] = {}
+        social_meta = SocialMetaModel.query_social_meta_info(g.account["user_id"])
+        result["wechat_info"] = MeHandler.format_wechat_info(g.account["user_id"],
+                                                             social_meta.wechat_want if social_meta else 0
+                                                             )
         return json_success_response(result)
+
+    @staticmethod
+    def format_wechat_info(user_id, wechat_want_buy=0):
+        result = {
+            "wechat_status": 0,
+            "wechat_price": 0,
+            "wechat": "",
+            "wechat_buy_status": 0,
+            "wechat_sell_num": 0,
+            "wechat_added": 0,
+            "wechat_want_buy": 0,
+            "wechat_want_buy_status": 0,
+        }
+
+        wechat = UserWeChatModel.query_user_wechat_model(user_id)
+        if wechat:
+            result["wechat_status"] = wechat.status
+            result["wechat_price"] = wechat.price / 100
+        else:
+            result["wechat_status"] = 2
+
+        wechat_buy = MeHandler.check_buy_wechat(user_id)
+        result["wechat_buy_status"] = wechat_buy.get("wechat_buy_status", 0)
+        result["wechat_sell_num"] = wechat_buy.get("wechat_sell_num", 0)
+        result["wechat_added"] = wechat_buy.get("wechat_added", 0)
+        result["wechat_want_buy"] = wechat_want_buy
+
+        want_buy_model = WeChatWantBuyModel.query_wechat_want_buy(user_id, g.account["user_id"])
+        result["wechat_want_buy_status"] = 1 if want_buy_model else 0
+
+        return result
+
+    @staticmethod
+    def check_buy_wechat(user_id):
+        query = OrderMetaModel.query.filter_by(seller_id=user_id, product_type=80, pay_status=1)
+        sell_num = query.count()
+        order_meta = query.filter_by(buyer_id=g.account["user_id"]).first()
+
+        result = {
+            "wechat_buy_status": 1 if order_meta else 0,
+            "wechat_sell_num": sell_num,
+            "wechat_added": 0,
+        }
+
+        if order_meta and order_meta.ship_status == 3:
+            result["wechat_added"] = 1
+
+        return result
 
 
 class IndexHandler(BaseHandler):
@@ -74,7 +130,7 @@ class IndexHandler(BaseHandler):
         result["follow_num"] = social_meta_info.following if social_meta_info else 0
         result["fans_num"] = social_meta_info.follower if social_meta_info else 0
         result["follow_status"] = FollowModel.query_relation_to_user(g.account["user_id"], params["user_id"])
-        result["album"] = []
+        result["album"] = UserInfoModel.query_user_album(params["user_id"])
 
         social_page_info = SocialPageModel.query_social_page_model(params["user_id"])
         result["user_banner"] = social_page_info.get("cover", "")
@@ -89,6 +145,10 @@ class IndexHandler(BaseHandler):
 
         if result["identified"] == 1:
             result["identify_title"] = "官方认证：" + result["identify_title"]
+
+        result["wechat_info"] = MeHandler.format_wechat_info(params["user_id"],
+                                                             social_meta_info.wechat_want if social_meta_info else 0
+                                                             )
 
         user_location = UserLocationModel.query.filter(UserLocationModel.id == user_info.location_id).first()
         result["latitude"] = user_location.latitude if user_location else 0

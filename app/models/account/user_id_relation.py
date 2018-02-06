@@ -32,3 +32,20 @@ class UserIdRelationModel(db.Model, BaseModel):
         if model:
             cache.set(cache_key, model)
         return model
+
+    @staticmethod
+    def query_user_by_ease_mob_id(ease_mob_id, refresh=False):
+        if not ease_mob_id:
+            return None
+
+        cache_key = user_id_relation_cache_key + ease_mob_id
+
+        if not refresh:
+            result = cache.get(cache_key)
+            if result:
+                return result
+
+        result = UserIdRelationModel.query.filter_by(str_id=ease_mob_id, status=1).first()
+        if result:
+            cache.set(cache_key, result)
+        return result

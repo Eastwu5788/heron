@@ -13,7 +13,9 @@ from app.helper.upload import UploadImage
 from app.models.account.user_info import UserInfoModel
 from app.models.account.user_invite_code import UserInviteCodeModel
 from app.models.account.user_wechat import UserWeChatModel
-from app.models.social.social_meta import SocialMetaModel
+from app.models.account.user_id_relation import UserIdRelationModel
+from app.models.account.remark_name import RemarkNameModel
+from app.models.social.user_consumer import UserConsumerModel
 from app.models.social.social_page import SocialPageModel
 from app.models.coffer.user_profit import UserProfitModel
 from app.models.account.user_location import UserLocationModel
@@ -254,6 +256,35 @@ class ChangeCoverHandler(BaseHandler):
         pass
 
 
+class EaseMobHandler(BaseHandler):
+
+    rule = {
+        "huanxin_uid": Rule()
+    }
+
+    @login_required
+    @filter_params(get=rule)
+    def get(self, params):
+        user_id_relation = UserIdRelationModel.query_user_by_ease_mob_id(params["huanxin_uid"])
+        if not user_id_relation:
+            return json_fail_response(2109)
+
+        user_info = UserInfoModel.query_user_model_by_id(user_id_relation.user_id)
+        has_trade = UserConsumerModel.query_trade_relationship(user_id_relation.user_id, g.account["user_id"])
+        follow_status = FollowModel.query_relation_to_user(g.account["user_id"], user_id_relation.user_id)
+        remark_name = RemarkNameModel.query_remark_name(g.account["user_id"], user_id_relation.user_id)
+
+        result = {
+            "user_info": UserInfoModel.format_user_info(user_info),
+            "had_trade": has_trade,
+            "follow_status": follow_status,
+            "black_status": 0,
+            "remark_name": remark_name.remark_nickname if remark_name else ""
+        }
+        return json_success_response(result)
+
+
 user.add_url_rule("/userinfo/me", view_func=MeHandler.as_view("user_info_me"))
 user.add_url_rule("/userinfo/index", view_func=IndexHandler.as_view("user_info_index"))
 user.add_url_rule("/userinfo/changecover", view_func=ChangeCoverHandler.as_view("user_info_change_cover"))
+user.add_url_rule("/userinfo/getbyhuanxin", view_func=EaseMobHandler.as_view("ease_mob_user_info"))

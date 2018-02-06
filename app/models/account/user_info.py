@@ -4,6 +4,8 @@ from app.models.base.base import BaseModel
 
 from app.models.social.album import AlbumModel
 from app.models.social.image import ImageModel
+from app.models.account.user_personal_info import UserPersonalInfoModel
+from app.models.account.user_id_relation import UserIdRelationModel
 
 user_info_cache_key_by_id = "UserInfoModel:QueryByID:"
 
@@ -92,6 +94,12 @@ class UserInfoModel(db.Model, BaseModel):
             img = ImageModel.query_image_by_id(user.avatar)
             user_info_dict["avatar"] = ImageModel.generate_image_url(img, size='b')
             user_info_dict["big_avatar"] = ImageModel.generate_image_url(img, size='f')
+
+        user_personal_info = UserPersonalInfoModel.query_personal_info_by_user_id(user.user_id)
+        user_info_dict["age"] = user_personal_info.age if user_personal_info else 0
+
+        user_id_relation = UserIdRelationModel.query_user_id_relation(user.user_id)
+        user_info_dict["huanxin_uid"] = user_id_relation.str_id
 
         return user_info_dict
 

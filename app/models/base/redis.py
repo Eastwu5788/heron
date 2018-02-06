@@ -9,6 +9,8 @@ class RedisModel(object):
 
     new_comment = "New:Comment:Add:"
 
+    private_image_want = "Private:Image:WantBuy:"
+
     @staticmethod
     def add_new_message(user_id, message):
         """
@@ -30,4 +32,4 @@ class RedisModel(object):
     @staticmethod
     def reset_new_message(user_id, message):
         cache_key = message + str(user_id)
-        redis.set(cache_key, 0)
+        redis.set(cache_key, 0, -1)

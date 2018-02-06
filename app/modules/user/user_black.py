@@ -50,4 +50,32 @@ class IndexHandler(BaseHandler):
         return json_success_response(result)
 
 
+class BlackStatusHandler(BaseHandler):
+
+    rule = {
+        "black_user_id": Rule(direct_type=int)
+    }
+
+    @login_required
+    @filter_params(get=rule)
+    def get(self, params):
+        code = UserBlackModel.check_black_status(g.account["user_id"], params["black_user_id"])
+        result = {
+            "data": code,
+            "message": "无拉黑关系"
+        }
+
+        if code == 1:
+            result["message"] = "我把它拉黑"
+        elif code == 2:
+            result["message"] = "他把我拉黑"
+        elif code == 3:
+            result["message"] = "已互相拉黑"
+
+        return json_success_response(result)
+
+
+
+
 user.add_url_rule("/getuserblack/index", view_func=IndexHandler.as_view("get_user_black_index"))
+user.add_url_rule("/checkisblack/getblackstatus", view_func=BlackStatusHandler.as_view("get_black_status"))

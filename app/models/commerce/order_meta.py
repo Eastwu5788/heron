@@ -1,4 +1,6 @@
 import datetime
+from sqlalchemy import text
+from collections import OrderedDict
 from app import db
 from app.models.base.base import BaseModel
 
@@ -25,3 +27,23 @@ class OrderMetaModel(db.Model, BaseModel):
     pay_id = db.Column(db.Integer, default=0)
     created_time = db.Column(db.DateTime, default=datetime.datetime.now)
     updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
+    @staticmethod
+    def query_order_meta_model(seller_id, buyer_id, product_type, pay_status):
+        query = OrderMetaModel.query.filter_by(seller_id=seller_id, buyer_id=buyer_id, product_type=product_type)
+        result = query.filter(pay_status=pay_status).order_by(OrderMetaModel.id.desc()).first()
+        return result
+
+    @staticmethod
+    def query_order_meta(params=OrderedDict()):
+
+        query = OrderMetaModel.query
+
+        for key, value in params.items():
+            query = query.filter(text("%s=:%s" % (key, key)))
+
+        result = query.params(params).first()
+        if not result:
+            result = None
+
+        return result

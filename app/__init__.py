@@ -1,13 +1,13 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cache import Cache
-from .modules.vendor.flask_redis import Redis
+from .modules.vendor.flask_redis import FlaskRedis
 from config.setting import config, MIDDLEWARE
 from .middleware.base_middleware import BaseMiddleWare
 
 db = SQLAlchemy()
 cache = Cache()
-redis = Redis()
+redis = FlaskRedis()
 
 
 def create_app(config_name):

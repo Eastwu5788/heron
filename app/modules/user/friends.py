@@ -10,6 +10,7 @@ from app.models.account.user_info import UserInfoModel
 
 from app.helper.response import *
 from app.helper.utils import array_column
+from app.helper.auth import login_required
 
 
 class GetListHandler(BaseHandler):
@@ -59,4 +60,18 @@ class GetListHandler(BaseHandler):
         return json_success_response(result)
 
 
+class FriendStatusHandler(BaseHandler):
+
+    rule = {
+        "user_id": Rule(direct_type=int)
+    }
+
+    @login_required
+    @filter_params(get=rule)
+    def get(self, params):
+        relation = FollowModel.query_relation_to_user(g.account["user_id"], params["user_id"])
+        return json_success_response({"data": relation})
+
+
 user.add_url_rule("/friends/getlist", view_func=GetListHandler.as_view("friends_get_list"))
+user.add_url_rule("/friends/getfriendstatus", view_func=FriendStatusHandler.as_view("get_friend_status"))

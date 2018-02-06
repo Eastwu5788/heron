@@ -14,3 +14,4 @@ from . import aha_account
 from . import user_feed_back
 from . import wechat
 from . import user_black
+from . import privatelibrary

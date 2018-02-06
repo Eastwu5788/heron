@@ -17,6 +17,7 @@ from app.helper.auth import login_required
 
 album_max = 20
 
+
 class UploadAvatarHandler(BaseHandler):
 
     @login_required

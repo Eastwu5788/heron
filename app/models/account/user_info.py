@@ -90,10 +90,10 @@ class UserInfoModel(db.Model, BaseModel):
             user_info_dict["avatar"] = ""
             user_info_dict["big_avatar"] = ""
         else:
-            from app.models.social.image import ImageModel
+
             img = ImageModel.query_image_by_id(user.avatar)
-            user_info_dict["avatar"] = ImageModel.generate_image_url(img, size='b')
-            user_info_dict["big_avatar"] = ImageModel.generate_image_url(img, size='f')
+            user_info_dict["avatar"] = UserInfoModel.format_user_avatar(user, img, 'b')
+            user_info_dict["big_avatar"] = UserInfoModel.format_user_avatar(user, img, 'f')
 
         user_personal_info = UserPersonalInfoModel.query_personal_info_by_user_id(user.user_id)
         user_info_dict["age"] = user_personal_info.age if user_personal_info else 0
@@ -102,6 +102,19 @@ class UserInfoModel(db.Model, BaseModel):
         user_info_dict["huanxin_uid"] = user_id_relation.str_id
 
         return user_info_dict
+
+    @staticmethod
+    def format_user_avatar(user_model, img_model=None, size='b'):
+        if not user_model:
+            return ""
+
+        if not img_model:
+            img_model = ImageModel.query_image_by_id(user_model.avatar)
+
+        if not img_model:
+            return ""
+
+        return ImageModel.generate_image_url(img_model, size=size)
 
     @staticmethod
     def duplicate_nick_name(nickname, user_id):

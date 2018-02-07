@@ -1,5 +1,6 @@
 import datetime
 from sqlalchemy import and_, or_
+from sqlalchemy.sql import func
 from app.models.base.base import BaseModel
 
 from app.helper.utils import array_column
@@ -64,3 +65,16 @@ class UserConsumerModel(db.Model, BaseModel):
             user_id_list_2 = array_column(query, "consumer_user_id")
 
             return list(set(user_id_list_1).union(set(user_id_list_2)))
+
+    @staticmethod
+    def query_relation_consumer_money(user_id, other_user_id):
+        """
+        查询对方为我消费的总金额
+        :param user_id: 我的id
+        :param other_user_id: 对方的id
+        """
+        query = db.session.query(func.sum(UserConsumerModel.money))
+        result = query.filter_by(user_id=user_id, consumer_user_id=other_user_id, status=1).all()
+        if not result:
+            result = 0
+        return result[0][0]

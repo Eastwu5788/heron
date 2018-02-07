@@ -13,3 +13,4 @@ from . import add_comment
 from . import get_comment
 from . import chat
 from . import visitor
+from . import reward

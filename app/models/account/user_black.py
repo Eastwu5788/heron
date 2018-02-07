@@ -5,6 +5,10 @@ from app.models.base.base import BaseModel
 from app.models.account.user_info import UserInfoModel
 from app.models.social.follow import FollowModel
 
+from app.helper.utils import array_column
+
+cache_black_key = "UserBlackModel:BlackUsers:"
+
 
 class UserBlackModel(db.Model, BaseModel):
     __bind_key__ = "a_account"
@@ -32,6 +36,16 @@ class UserBlackModel(db.Model, BaseModel):
         return result
 
     @staticmethod
+    def query_user_black(user_id, black_user_id):
+        """
+        查询我拉黑他的模型
+        :param user_id: 我的用户id
+        :param black_user_id: 别我拉黑的用户id
+        """
+        result = UserBlackModel.query.filter_by(user_id=user_id, black_user_id=black_user_id, status=1).first()
+        return result
+
+    @staticmethod
     def check_black_status(user_id, black_user_id):
         """
         检查两个人是否有拉黑关系
@@ -53,7 +67,39 @@ class UserBlackModel(db.Model, BaseModel):
         return code
 
     @staticmethod
+    def query_black_people(user_id, refresh=False):
+        """
+        查询被我拉黑或我拉黑的用户的列表
+        :param user_id: 查询用户id
+        :param refresh: 是否刷新缓存
+        """
+        cache_key = cache_black_key + str(user_id)
+        if not refresh:
+            result = cache.get(cache_key)
+            if result:
+                return result
+
+        black_model_list = UserBlackModel.query.filter_by(user_id=user_id, status=1).all()
+        if not black_model_list:
+            black_model_list = []
+
+        black_id_list = array_column(black_model_list, "black_user_id")
+
+        be_black_model_list = UserBlackModel.query.filter_by(black_user_id=user_id, status=1).all()
+        if not be_black_model_list:
+            be_black_model_list = []
+
+        be_black_id_list = array_column(be_black_model_list, "user_id")
+
+        id_list = list(set(black_id_list).union(set(be_black_id_list)))
+        if id_list:
+            cache.set(cache_key, id_list)
+
+        return id_list
+
+    @staticmethod
     def update_black_status(user_id, black_user_id, status):
+        result = dict()
         if status == 1:
             # 当前用户不允许被拉黑
             result = UserBlackModel.black_able(black_user_id)
@@ -74,7 +120,7 @@ class UserBlackModel(db.Model, BaseModel):
 
     @staticmethod
     def cancel_back_user(user_id, black_user_id):
-        user_black = UserBlackModel.query.filter_by(user_id, black_user_id).first()
+        user_black = UserBlackModel.query.filter_by(user_id=user_id, black_user_id=black_user_id).first()
         if not user_black or user_black.status != 1:
             return {"data": 0, "message": "当前未拉黑该用户"}
         user_black.status = 0
@@ -83,7 +129,7 @@ class UserBlackModel(db.Model, BaseModel):
 
     @staticmethod
     def black_user(user_id, black_user_id):
-        user_black = UserBlackModel.query.filter_by(user_id, black_user_id).first()
+        user_black = UserBlackModel.query.filter_by(user_id=user_id, black_user_id=black_user_id).first()
 
         if not user_black:
             user_black = UserBlackModel()
@@ -99,12 +145,13 @@ class UserBlackModel(db.Model, BaseModel):
         try:
             db.session.commit()
         except:
-            return {"data":0, "message": "拉黑失败"}
+            return {"data": 0, "message": "拉黑失败"}
 
-        # 取消关注
+        # 取消关注 2->我关注他 3->他关注我 4->互相关注
         follow = FollowModel.query_relation_to_user(user_id, black_user_id)
         if follow in (2, 4):
-
-
+            FollowModel.cancel_user_follow(user_id, black_user_id)
+        if follow in (3, 4):
+            FollowModel.cancel_user_follow(black_user_id, user_id)
 
         return {"data": 1, "message": "拉黑成功"}

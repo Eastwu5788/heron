@@ -53,8 +53,11 @@ class ShareModel(db.Model, BaseModel):
         return result
 
     @staticmethod
-    def query_share_model(share_id):
-        return ShareModel.query.filter_by(share_id=share_id).first()
+    def query_share_model(share_id, status=status_public):
+        query = ShareModel.query.filter_by(share_id=share_id)
+        if status:
+            query = query.filter(ShareModel.status.in_(status))
+        return query.first()
 
     @staticmethod
     def format_share_model(share_info_list=list(), account=0):

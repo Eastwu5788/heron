@@ -10,11 +10,15 @@ from app.models.account.user_info import UserInfoModel
 from app.models.social.comment import CommentModel
 from app.models.social.share import ShareModel, status_public
 from app.models.social.image import ImageModel
+from app.models.social.user_consumer import UserConsumerModel
 from app.models.commerce.order_meta import OrderMetaModel
+from app.models.coffer.user_income import UserIncomeModel
 
 from app.helper.response import *
 from app.helper.auth import login_required
 from app.helper.utils import array_column, array_column_key
+
+from app.common.enum_message import *
 
 
 class NewCommentHandler(BaseHandler):
@@ -136,6 +140,54 @@ class TradeHandler(BaseHandler):
         return json_success_response(result)
 
 
+class SpendForMeHandler(BaseHandler):
+
+    rule = {
+        "user_id": Rule(direct_type=int),
+        "last_id": Rule(direct_type=int)
+    }
+
+    @login_required
+    @filter_params(get=rule)
+    def get(self, params):
+        result = {
+            "list": list(),
+            "sum_cash": 0,
+        }
+        money = UserConsumerModel.query_relation_consumer_money(g.account["user_id"], params["user_id"])
+
+        order_list = OrderMetaModel.query_order_with_others(g.account["user_id"],
+                                                            params["user_id"],
+                                                            last_id=params["last_id"]
+                                                            )
+        # 没有订单数据
+        if not order_list:
+            return json_success_response(result)
+
+        order_id_list = array_column(order_list, "order_id")
+        user_income_model_list = UserIncomeModel.query_order_income_list(g.account["user_id"], order_id_list)
+        if not user_income_model_list:
+            return json_success_response(result)
+
+        item_list = list()
+        for model in user_income_model_list:
+            item = dict()
+            item["id"] = model.order_id
+            item["cash_amount"] = model.cash_amount / 100
+
+            item["time"] = model.created_time
+            item["type"] = model.type
+            item["message"] = order_type_message.get(model.type, "未知类型")
+            item["type_img"] = order_type_image_url.get(model.type, "")
+
+            item_list.append(item)
+        result["sum_cash"] = money / 100
+        result["list"] = item_list
+
+        return json_success_response(result)
+
+
 social.add_url_rule("/chat/isnewcomment", view_func=NewCommentHandler.as_view("chat_is_new_comment"))
 social.add_url_rule("/chat/getcomment", view_func=GetCommentHandler.as_view("chat_get_comment"))
 social.add_url_rule("/chat/tradeforother", view_func=TradeHandler.as_view("trade_for_other"))
+social.add_url_rule("/chat/spendforme", view_func=SpendForMeHandler.as_view("spend_for_me"))

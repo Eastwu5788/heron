@@ -46,6 +46,11 @@ class DevelopConfig(BaseConfig):
     UPLOAD_VIDEO_PATH = INI_CONFIG["upload_video"]["video_upload_path"]
     VIDEO_HOST = INI_CONFIG["upload_video"]["video_uri"]
 
+    # 微信支付APP ID
+    WX_APP_ID = INI_CONFIG["weixin"]["appid"]
+    WX_MCH_ID = INI_CONFIG["weixin"]["mch_id"]
+    WX_MCH_KEY = INI_CONFIG["weixin"]["partner_key"]
+
     @staticmethod
     def init_app(app):
         # 配置SQLAlchemy

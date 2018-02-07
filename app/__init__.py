@@ -48,6 +48,9 @@ def create_app(config_name):
     from app.modules.common import common
     app.register_blueprint(common, url_prefix="/common")
 
+    from app.modules.coffer import coffer
+    app.register_blueprint(coffer, url_prefix="/coffer")
+
     # 注册中间件
     for middle in MIDDLEWARE:
         if issubclass(middle, BaseMiddleWare):

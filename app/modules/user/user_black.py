@@ -8,7 +8,7 @@ from app.modules.vendor.pre_request.filter_rules import Rule, Length
 from app.models.account.aha_account import AhaAccountModel
 from app.models.account.user_black import UserBlackModel
 from app.models.account.user_info import UserInfoModel
-from app.models.social.image import ImageModel
+from app.models.account.user_id_relation import UserIdRelationModel
 
 from app.helper.response import *
 from app.helper.auth import login_required
@@ -42,9 +42,9 @@ class IndexHandler(BaseHandler):
             item["user_id"] = user_info.user_id
             item["nickname"] = user_info.nickname
 
-            img = ImageModel.query_image_by_id(user.avatar)
-            item["avatar"] = ImageModel.generate_image_url(img, size='b')
-            item["huanxin_uid"] = ""
+            item["avatar"] = UserInfoModel.format_user_avatar(user_info)
+            user_id_relation = UserIdRelationModel.query_user_id_relation(user_info.user_id)
+            item["huanxin_uid"] = user_id_relation.str_id if user_id_relation else ""
             result.append(item)
 
         return json_success_response(result)

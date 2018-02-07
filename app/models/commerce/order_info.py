@@ -24,6 +24,17 @@ class OrderInfoModel(db.Model, BaseModel):
     created_time = db.Column(db.DateTime, default=datetime.datetime.now)
     updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
+    def __init__(self, params):
+
+        if params:
+            for key, value in params:
+                if not hasattr(self, key):
+                    continue
+                setattr(self, key, value)
+
+            db.session.add(self)
+            db.session.commit()
+
     @staticmethod
     def query_order_info_model(order_id):
         if not order_id:

@@ -1,5 +1,7 @@
 import hashlib
 import time
+from datetime import datetime
+import uuid
 
 
 def md5(string):
@@ -61,3 +63,15 @@ def generate_password(user_id=0, password=""):
 def check_password(user_id=0, password="", pwd=""):
     user_pwd = generate_password(user_id, password)
     return user_pwd == pwd
+
+
+def generate_order_id():
+    """
+    生成16位不重复的唯一订单号
+    """
+    uuid_str = str(uuid.uuid1()).replace("-", "")
+    uuid_int = int(uuid_str, 16)
+    special_id = str(uuid_int)[5:15]
+    time_str = datetime.now().strftime("%Y%m%d")
+    return time_str[2:] + special_id
+

@@ -2,6 +2,8 @@ import datetime
 from app import db
 from app.models.base.base import BaseModel
 
+from app.models.social.social_meta import  SocialMetaModel
+
 from app.helper.utils import array_column
 
 
@@ -103,8 +105,25 @@ class FollowModel(db.Model, BaseModel):
 
     @staticmethod
     def query_user_follow(user_id=0, follow_id=0):
+        """
+        查询某人关注某个人的模型
+        :param user_id: 用户id
+        :param follow_id: 关注的用户id
+        """
         user_follow_model = FollowModel.query.filter_by(user_id=user_id, follow_id=follow_id).first()
         return user_follow_model
+
+    @staticmethod
+    def cancel_user_follow(user_id, follow_id):
+        """
+        取消关注某一个用户
+        :param user_id: 当前用户
+        :param follow_id: 关注的用户
+        :return:
+        """
+        FollowModel.query.filter_by(user_id=user_id, follow_id=follow_id).update(dict(status=0))
+        SocialMetaModel.update_social_meta_model(user_id, ["following"], False)
+        SocialMetaModel.update_social_meta_model(follow_id, ["follower"], False)
 
     @staticmethod
     def query_relation_to_user(user_id, other_user_id):

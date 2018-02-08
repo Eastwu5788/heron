@@ -27,6 +27,7 @@ from app.helper.secret import *
 
 from app.common.enum_message import payment_type_message
 
+
 class IndexHandler(BaseHandler):
 
     rule = {

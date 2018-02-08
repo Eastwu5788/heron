@@ -49,3 +49,8 @@ class OrderInfoModel(db.Model, BaseModel):
             if not result:
                 result = None
         return result
+
+    @staticmethod
+    def query_order_info_with_order_no(order_no):
+        return OrderInfoModel.query.filter_by(order_no=order_no).first()
+

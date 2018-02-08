@@ -81,18 +81,6 @@ class PaymentOrderModel(object):
         app_private_key_string = open(config["ali_private_key_path"]).read()
         alipay_public_key_string = open(config["ali_public_key_path"]).read()
 
-        app_private_key_string == """
-                -----BEGIN RSA PRIVATE KEY-----
-                base64 encoded content
-                -----END RSA PRIVATE KEY-----
-                """
-
-        alipay_public_key_string == """
-                -----BEGIN PUBLIC KEY-----
-                base64 encoded content
-                -----END PUBLIC KEY-----
-            """
-
         alipay = AliPay(config["ali_app_id"], config["ali_notify_url"],
                         app_private_key_string, alipay_public_key_string,
                         config["ali_sign_type"])
@@ -103,3 +91,20 @@ class PaymentOrderModel(object):
             subject=params["pro_name"]
         )
         return True, {"url": order_string, "out_trade_no": params["order_no"]}
+
+    @staticmethod
+    def verify_ali_order(params):
+        """
+        验证支付宝订单
+        """
+        config = PaymentOrderModel.load_config_params()
+        app_private_key_string = open(config["ali_private_key_path"]).read()
+        alipay_public_key_string = open(config["ali_public_key_path"]).read()
+
+        alipay = AliPay(config["ali_app_id"], config["ali_notify_url"],
+                        app_private_key_string, alipay_public_key_string,
+                        config["ali_sign_type"])
+
+        signature = params.pop("sign")
+        return alipay.verify(params, signature)
+

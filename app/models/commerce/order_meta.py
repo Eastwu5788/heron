@@ -39,6 +39,10 @@ class OrderMetaModel(db.Model, BaseModel):
             db.session.commit()
 
     @staticmethod
+    def query_order_meta_with_order_id(order_id):
+        return OrderMetaModel.query.filter_by(order_id=order_id).first()
+
+    @staticmethod
     def query_order_meta_model(seller_id, buyer_id, product_type, pay_status):
         query = OrderMetaModel.query.filter_by(seller_id=seller_id, buyer_id=buyer_id, product_type=product_type)
         result = query.filter(pay_status=pay_status).order_by(OrderMetaModel.id.desc()).first()

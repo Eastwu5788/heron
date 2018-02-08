@@ -27,7 +27,7 @@ class PaymentModel(db.Model, BaseModel):
     def __init__(self, params):
 
         if params:
-            for key, value in params:
+            for key, value in params.items():
                 if not hasattr(self, key):
                     continue
 

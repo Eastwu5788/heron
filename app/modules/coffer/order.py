@@ -2,6 +2,8 @@ from collections import OrderedDict
 from flask import g
 from . import coffer
 
+from app import db
+
 from app.modules.base.base_handler import BaseHandler
 
 from app.modules.vendor.pre_request.flask import filter_params
@@ -17,6 +19,7 @@ from app.models.commerce.order_info import OrderInfoModel
 from app.models.coffer.payment import PaymentModel
 from app.models.commerce.order_meta import OrderMetaModel
 from app.models.commerce.order_user_status import OrderUserStatusModel
+from app.models.comment.payment_order import PaymentOrderModel
 
 from app.helper.auth import login_required
 from app.helper.response import *
@@ -36,7 +39,7 @@ class IndexHandler(BaseHandler):
         "mobile": Rule(allow_empty=True, default="", mobile=True),
         "address_name": Rule(allow_empty=True),                     # 收货地址
         "email": Rule(allow_empty=True, default="", email=True),
-        "message": Rule()                                           # 留言
+        "message": Rule(allow_empty=True, default="")               # 留言
     }
 
     @login_required
@@ -54,19 +57,31 @@ class IndexHandler(BaseHandler):
 
         # 创建订单
         result = IndexHandler.generate_order(params, result)
-        result = IndexHandler.generate_payment_params(params ,result["payment_param"], result["order_info"])
+        success, result = IndexHandler.generate_payment_params(params, result["payment_param"], result["order_info"])
 
+        if not success:
+            return json_fail_response(result)
+
+        return json_success_response(result)
 
     @staticmethod
     def generate_payment_params(params, payment_param, order_info):
-
+        result = {}
         # 生成微信订单数据
         if params["channel_type"] == 1:
-            
+            success, result = PaymentOrderModel.generate_wx_order(payment_param)
+            if not success:
+                return False, result
+
+            if result.get("prepayid", None):
+                OrderInfoModel.query.filter_by(order_id=order_info.get("order_id")).update(dict(transaction_id=result["prepayid"]))
+                db.session.commit()
 
         # 生成支付宝订单数据
         elif params["channel_type"] == 2:
+            success, result = PaymentOrderModel.generate_ali_order(payment_param)
 
+        return True, result
 
     @staticmethod
     def generate_order(params, order_meta):
@@ -157,7 +172,7 @@ class IndexHandler(BaseHandler):
 
             order_meta["seller_id"] = params["user_id"]
             order_meta["share_id"] = 0
-            order_meta["price"] = params["price"]
+            order_meta["price"] = params["price"] * 100
 
         # 商品
         elif params["type_id"] == 50 or params["type_id"] == 51:

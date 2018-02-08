@@ -46,10 +46,20 @@ class DevelopConfig(BaseConfig):
     UPLOAD_VIDEO_PATH = INI_CONFIG["upload_video"]["video_upload_path"]
     VIDEO_HOST = INI_CONFIG["upload_video"]["video_uri"]
 
-    # 微信支付APP ID
+    # 微信支付相关账号
     WX_APP_ID = INI_CONFIG["weixin"]["appid"]
     WX_MCH_ID = INI_CONFIG["weixin"]["mch_id"]
     WX_MCH_KEY = INI_CONFIG["weixin"]["partner_key"]
+
+    # 支付宝支付相关账号
+    ALI_APP_ID = INI_CONFIG["ali"]["appid"]
+    ALI_PARTNER_ID = INI_CONFIG["ali"]["partner_id"]
+    ALI_SELLER_ID = INI_CONFIG["ali"]["seller_id"]
+    ALI_KEY = INI_CONFIG["ali"]["key"]
+    ALI_SIGN_TYPE = INI_CONFIG["ali"]["sign_type"]
+    ALI_PRIVATE_KEY_PATH = INI_CONFIG["ali"]["private_key_path"]
+    ALI_PUBLIC_KEY_PATH = INI_CONFIG["ali"]["public_key_path"]
+    ALI_CACERT_PATH = INI_CONFIG["ali"]["cacert"]
 
     @staticmethod
     def init_app(app):

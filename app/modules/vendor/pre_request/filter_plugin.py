@@ -178,6 +178,9 @@ class EmailFilter(BaseFilter):
         super(EmailFilter, self).__call__()
 
         if self.rule.email:
+            if self.rule.allow_empty and not self.value:
+                return self.value
+
             from .filter_regexp import EmailRegexp
             if not EmailRegexp()(self.value):
                 raise ParamsValueError(self.error_code, filter=self)
@@ -193,6 +196,10 @@ class MobileFilter(BaseFilter):
         super(MobileFilter, self).__call__()
 
         if self.rule.mobile:
+            # 手机号允许为空的情况下，并且手机号没有
+            if self.rule.allow_empty and not self.value:
+                return self.value
+
             from .filter_regexp import MobileRegexp
             if not MobileRegexp()(self.value):
                 raise ParamsValueError(self.error_code, filter=self)

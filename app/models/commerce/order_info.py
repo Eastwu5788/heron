@@ -17,9 +17,9 @@ class OrderInfoModel(db.Model, BaseModel):
     order_fee = db.Column(db.Integer, default=0)
     address_id = db.Column(db.Integer, default=0)
     order_message = db.Column(db.String(255), default=0)
-    pay_time = db.Column(db.DateTime, default="")
-    ship_time = db.Column(db.DateTime, default="")
-    receive_time = db.Column(db.DateTime, default="")
+    pay_time = db.Column(db.DateTime, default=datetime.datetime.now)
+    ship_time = db.Column(db.DateTime, default=datetime.datetime.now)
+    receive_time = db.Column(db.DateTime, default=datetime.datetime.now)
     transaction_id = db.Column(db.String(45), default="")
     created_time = db.Column(db.DateTime, default=datetime.datetime.now)
     updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
@@ -27,7 +27,7 @@ class OrderInfoModel(db.Model, BaseModel):
     def __init__(self, params):
 
         if params:
-            for key, value in params:
+            for key, value in params.items():
                 if not hasattr(self, key):
                     continue
                 setattr(self, key, value)

@@ -11,6 +11,10 @@ class RedisModel(object):
 
     private_image_want = "Private:Image:WantBuy:"
 
+    order_push_list = "New:Order:Push:List:"
+
+    new_order = "New:Order:Add:"
+
     @staticmethod
     def add_new_message(user_id, message):
         """
@@ -33,3 +37,7 @@ class RedisModel(object):
     def reset_new_message(user_id, message):
         cache_key = message + str(user_id)
         redis.set(cache_key, 0, -1)
+
+    @staticmethod
+    def push_list(key, value):
+        redis.sadd(key, value)

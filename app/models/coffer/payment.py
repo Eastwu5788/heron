@@ -34,3 +34,7 @@ class PaymentModel(db.Model, BaseModel):
                 setattr(self, key, value)
             db.session.add(self)
             db.session.commit()
+
+    @staticmethod
+    def query_payment(pay_id):
+        return PaymentModel.query.filter_by(pay_id=pay_id).first()

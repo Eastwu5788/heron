@@ -18,6 +18,7 @@ from app.models.social.offer import OfferModel
 from app.helper.response import *
 from app.common.enum_message import payment_pay_type
 
+
 class AliHandler(BaseHandler):
 
     rule = {
@@ -79,7 +80,7 @@ class AliHandler(BaseHandler):
         if order_meta.product_type == 80:
             AliHandler.send_remind_sms_for_wx(order_meta)
         elif order_meta.product_type == 90:
-
+            pass
 
     @staticmethod
     def update_order(params, order_info, meta_info):
@@ -221,9 +222,6 @@ class AliHandler(BaseHandler):
             "due_time": (datetime.datetime.strptime(params["pay_time"]) + datetime.timedelta(seconds=86400)).strftime("%Y-%m-%d %H:%M:%S")
         }
         OfferModel.query.filter_by(share_id=meta_info.share_id).update(offer_update)
-
-
-
 
 
 coffer.add_url_rule("/notify/ali", view_func=AliHandler.as_view("ali_pay_notify"))

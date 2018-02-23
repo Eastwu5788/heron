@@ -6,4 +6,6 @@ __version__ = "0.0.1"
 
 from .flask import filter_params
 from .filter_rules import Rule
+from .filter_rules import Length
+
 

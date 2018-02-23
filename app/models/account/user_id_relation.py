@@ -1,4 +1,5 @@
 import datetime
+from sqlalchemy import func
 from app import db, cache
 from app.models.base.base import BaseModel
 
@@ -32,6 +33,11 @@ class UserIdRelationModel(db.Model, BaseModel):
         if model:
             cache.set(cache_key, model)
         return model
+
+    @staticmethod
+    def query_user_id_relation_count():
+        """统计数量"""
+        return db.session.query(func.count(UserIdRelationModel.id)).scalar()
 
     @staticmethod
     def query_user_by_ease_mob_id(ease_mob_id, refresh=False):

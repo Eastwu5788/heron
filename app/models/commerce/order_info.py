@@ -54,3 +54,14 @@ class OrderInfoModel(db.Model, BaseModel):
     def query_order_info_with_order_no(order_no):
         return OrderInfoModel.query.filter_by(order_no=order_no).first()
 
+    @staticmethod
+    def update_order_info(order_id, params):
+        """
+        更新订单信息
+        :param order_id: 订单id
+        :param params: 需要修改的参数
+        """
+        if not order_id or not params:
+            return
+
+        OrderInfoModel.query.filter_by(order_id=order_id).update(params)

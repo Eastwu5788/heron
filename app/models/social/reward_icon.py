@@ -8,7 +8,7 @@ class RewardIconModel(db.Model, BaseModel):
     __bind_key__ = "a_social"
     __tablename__ = "reward_icon"
 
-    __fillable__ = ["name", "price", "url", "type", "join"]
+    __fillable__ = ["id", "name", "price", "url", "type", "join"]
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), default="")
@@ -34,3 +34,7 @@ class RewardIconModel(db.Model, BaseModel):
             cache.set(cache_key, result)
 
         return result
+
+    @staticmethod
+    def query_icon_with_id(icon_id):
+        return RewardIconModel.query.filter_by(id=icon_id).first()

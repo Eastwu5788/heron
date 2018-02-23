@@ -87,3 +87,10 @@ class OrderMetaModel(db.Model, BaseModel):
         if not result:
             result = []
         return result
+
+    @staticmethod
+    def update_order_meta(order_id, params):
+        if not order_id or not params:
+            return
+
+        OrderMetaModel.query.filter_by(order_id=order_id).update(params)

@@ -28,7 +28,11 @@ WHITE_LIST = [
 MOBILE_WHITE_LIST = [
     "13718416506",
     "18196549345",
+    "18999999999",
 ]
+
+# 客服ID列表
+SERVICE_ACCOUNT_LIST = [2]
 
 # load config file with 'dev' or 'pro'
 config = {

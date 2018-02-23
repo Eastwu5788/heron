@@ -15,3 +15,6 @@ from . import chat
 from . import visitor
 from . import reward
 from . import share_report
+from . import offer
+from . import driftingbottle
+

@@ -64,3 +64,15 @@ class ShareRecommendModel(db.Model, BaseModel):
             result_list.append(arr[0])
 
         return result_list
+
+    @staticmethod
+    def remove_offer_from_recommend(share_id):
+        """
+        将悬赏从首页推荐列表中删除
+        :param share_id:
+        """
+        if not share_id:
+            return False
+
+        ShareRecommendModel.query.filter_by(share_id=share_id).update(dict(share_type=0, status=0))
+

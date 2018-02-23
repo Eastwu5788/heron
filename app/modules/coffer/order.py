@@ -15,6 +15,8 @@ from app.models.account.user_address import UserAddressModel
 from app.models.account.user_wechat import UserWeChatModel
 from app.models.social.share import ShareModel
 from app.models.social.image import ImageModel
+from app.models.social.offer import OfferModel
+from app.models.social.reward_icon import RewardIconModel
 from app.models.commerce.order_info import OrderInfoModel
 from app.models.coffer.payment import PaymentModel
 from app.models.commerce.order_meta import OrderMetaModel
@@ -54,14 +56,14 @@ class IndexHandler(BaseHandler):
         # 生成订单信息
         success, result = IndexHandler.generate_base_order_info(params)
         if not success:
-            return json_fail_response(result)
+            return json_fail_response(message=result)
 
         # 创建订单
         result = IndexHandler.generate_order(params, result)
         success, result = IndexHandler.generate_payment_params(params, result["payment_param"], result["order_info"])
 
         if not success:
-            return json_fail_response(result)
+            return json_fail_response(message=result)
 
         return json_success_response(result)
 
@@ -115,7 +117,7 @@ class IndexHandler(BaseHandler):
         order_meta_info = {
             "buyer_id": g.account["user_id"],
             "seller_id": order_meta.get("seller_id", 0),
-            "share_id": order_meta.get("share_id"),
+            "share_id": order_meta.get("share_id", 0),
             "order_type": params["type_id"],
             "order_id": order_model.order_id,
             "product_type": params["type_id"],
@@ -249,4 +251,81 @@ class IndexHandler(BaseHandler):
         return True, old_address.id
 
 
+class OfferHandler(BaseHandler):
+
+    rule = {
+        "content": Rule(),
+        "present_id": Rule(direct_type=int),
+        "channel_type": Rule(direct_type=int),
+        "at_info": Rule(allow_empty=True, default="")
+    }
+
+    @login_required
+    @filter_params(post=rule)
+    def post(self, params):
+        user = UserInfoModel.query_user_model_by_id(g.account["user_id"])
+        if user.gender != 1:
+            return json_fail_response(2125)
+
+        if not OfferModel.check_offer_publish(g.account["user_id"]):
+            return json_fail_response(2126)
+
+        # 礼物信息
+        icon_model = RewardIconModel.query_icon_with_id(params["present_id"])
+
+        offer_params = {
+            "user_id": g.account["user_id"],
+            "share_id": 0,
+            "present_id": params["present_id"],
+            "total_number": icon_model.join,
+            "status": 1,
+            "offer_status": 1
+        }
+        offer = OfferModel(params=offer_params)
+        if not offer:
+            return json_fail_response(2127)
+
+        share = ShareModel()
+        share.user_id = g.account["user_id"]
+        share.type_id = 90
+        share.content = params["content"]
+        share.price = icon_model.price
+        share.status = 0
+        share.offer_id = offer.offer_id
+        share.data = params["at_info"]
+
+        db.session.add(share)
+        try:
+            db.session.commit()
+        except:
+            return json_fail_response(2127)
+
+        params["price"] = icon_model.price
+        params["message"] = ""
+        params["type_id"] = 90
+
+        order_meta = {
+            "buyer_id": g.account["user_id"],
+            "seller_id": 0,
+            "share_id": share.share_id,
+            "price": icon_model.price
+        }
+
+        # 创建订单
+        result = IndexHandler.generate_order(params, order_meta)
+
+        # 修改offer表
+        offer.share_id = share.share_id
+        offer.order_id = result["order_info"]["order_id"]
+        db.session.commit()
+
+        success, result = IndexHandler.generate_payment_params(params, result["payment_param"], result["order_info"])
+
+        if not success:
+            return json_fail_response(result)
+
+        return json_success_response(result)
+
+
 coffer.add_url_rule("/order/index", view_func=IndexHandler.as_view("order_index"))
+coffer.add_url_rule("/order/offer", view_func=OfferHandler.as_view("order_offer"))

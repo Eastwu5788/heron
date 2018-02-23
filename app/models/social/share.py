@@ -5,6 +5,7 @@ from app.models.base.base import BaseModel
 from app.models.social.share_meta import ShareMetaModel
 from app.models.social.image import ImageModel
 from app.models.social.like import LikeModel
+from app.models.social.offer import OfferModel
 from app.helper.utils import *
 
 # 线上版本的类型列表
@@ -50,6 +51,27 @@ class ShareModel(db.Model, BaseModel):
         result = query.order_by(ShareModel.share_id.desc()).all()
         if not result:
             result = []
+        return result
+
+    @staticmethod
+    def query_offer_share_list(user_id, last_id=0):
+        """
+        查询默认的所有悬赏列表
+        :param user_id: 需要查询的用户id
+        :param last_id: 最后一条动态的id
+        """
+        if not user_id:
+            return list()
+
+        query = ShareModel.query.filter_by(user_id=user_id, type_id=90).filter(ShareModel.status.in_(status_private))
+
+        if last_id:
+            query = query.filter(ShareModel.share_id < last_id)
+
+        result = query.order_by(ShareModel.share_id.desc()).limit(20).all()
+        if not result:
+            result = list()
+
         return result
 
     @staticmethod
@@ -109,6 +131,11 @@ class ShareModel(db.Model, BaseModel):
             # 删除无用数据
             del share_dic["data"]
 
+            # 格式化悬赏数据
+            share_dic["offer_info"] = dict()
+            if share_model.type_id == 90:
+                offer_model = OfferModel.query_offer_mode_with_offer_id(share_model.offer_id)
+                share_dic["offer_info"] = OfferModel.format_offer_info(offer_model, share_model, account)
             result_list.append(share_dic)
 
         return result_list

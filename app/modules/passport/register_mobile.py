@@ -16,7 +16,7 @@ from app.models.account.user_personal_info import UserPersonalInfoModel
 from app.models.account.aha_account import AhaAccountModel
 from app.models.account.user_social_info import UserSocialInfoModel
 from app.models.account.user_id_relation import UserIdRelationModel
-from app.helper.secret import generate_password
+from app.helper.secret import generate_password, md5
 
 
 class RegisterHandler(BaseHandler):

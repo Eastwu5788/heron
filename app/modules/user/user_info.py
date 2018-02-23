@@ -1,3 +1,4 @@
+from random import choice
 from flask import g
 from sqlalchemy import func
 from app import redis, db
@@ -269,10 +270,15 @@ class EaseMobHandler(BaseHandler):
         if not user_id_relation:
             return json_fail_response(2109)
 
-        user_info = UserInfoModel.query_user_model_by_id(user_id_relation.user_id)
-        has_trade = UserConsumerModel.query_trade_relationship(user_id_relation.user_id, g.account["user_id"])
-        follow_status = FollowModel.query_relation_to_user(g.account["user_id"], user_id_relation.user_id)
-        remark_name = RemarkNameModel.query_remark_name(g.account["user_id"], user_id_relation.user_id)
+        result = EaseMobHandler.format_ease_mob_user(g.account["user_id"], user_id_relation.user_id)
+        return json_success_response(result)
+
+    @staticmethod
+    def format_ease_mob_user(login_user_id, user_id):
+        user_info = UserInfoModel.query_user_model_by_id(user_id)
+        has_trade = UserConsumerModel.query_trade_relationship(user_id, login_user_id)
+        follow_status = FollowModel.query_relation_to_user(login_user_id, user_id)
+        remark_name = RemarkNameModel.query_remark_name(login_user_id, user_id)
 
         result = {
             "user_info": UserInfoModel.format_user_info(user_info),
@@ -281,6 +287,17 @@ class EaseMobHandler(BaseHandler):
             "black_status": 0,
             "remark_name": remark_name.remark_nickname if remark_name else ""
         }
+        return result
+
+
+class CustomerServiceHandler(BaseHandler):
+
+    customer_service = [2, 3, 4]
+
+    @login_required
+    def get(self):
+        user_id = choice(self.customer_service)
+        result = EaseMobHandler.format_ease_mob_user(g.account["user_id"], user_id)
         return json_success_response(result)
 
 
@@ -288,3 +305,4 @@ user.add_url_rule("/userinfo/me", view_func=MeHandler.as_view("user_info_me"))
 user.add_url_rule("/userinfo/index", view_func=IndexHandler.as_view("user_info_index"))
 user.add_url_rule("/userinfo/changecover", view_func=ChangeCoverHandler.as_view("user_info_change_cover"))
 user.add_url_rule("/userinfo/getbyhuanxin", view_func=EaseMobHandler.as_view("ease_mob_user_info"))
+user.add_url_rule("/userinfo/getcustomerservice", view_func=CustomerServiceHandler.as_view("get_customer_service"))

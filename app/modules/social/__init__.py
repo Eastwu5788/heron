@@ -14,3 +14,4 @@ from . import get_comment
 from . import chat
 from . import visitor
 from . import reward
+from . import share_report

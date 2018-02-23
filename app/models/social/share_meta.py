@@ -25,15 +25,21 @@ class ShareMetaModel(db.Model, BaseModel):
     updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     @staticmethod
-    def update_share_meta_model(share_id, user_id, params=list(), meta_add=True):
+    def update_share_meta_model(share_id=0, user_id=0, params=list(), meta_add=True):
         """
         更新share_meta的属性
         """
-        share_meta = ShareMetaModel.query.filter_by(share_id=share_id, user_id=user_id).first()
+        if not share_id:
+            return False
+
+        share_meta = ShareMetaModel.query.filter_by(share_id=share_id).first()
+
         if not share_meta:
             share_meta = ShareMetaModel()
             share_meta.share_id = share_id
-            share_meta.user_id = user_id
+
+            if share_meta.user_id:
+                share_meta.user_id = user_id
 
             db.session.add(share_meta)
             db.session.commit()

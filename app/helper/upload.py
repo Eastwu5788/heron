@@ -3,11 +3,14 @@ import os
 import time
 import hashlib
 from flask import request
-
+from werkzeug.utils import secure_filename
+from werkzeug.datastructures import FileStorage
 from PIL import Image, ImageFilter
 from app import db
 from app.helper.secret import md5
 from app.models.social.image import ImageModel
+from app.models.social.video import VideoModel
+from moviepy.editor import *
 
 
 def generate_image_file():
@@ -24,12 +27,26 @@ def generate_image_file():
     return path
 
 
+def generate_video_file():
+    """
+    生成视频文件存储路径
+    """
+    from heron import app
+
+    today = datetime.datetime.today()
+    path = "upload/%d/%02d/%02d/" % (today.year, today.month, today.day)
+    full_path = os.path.join(app.config["UPLOAD_VIDEO_PATH"], path)
+    if not os.path.exists(full_path):
+        os.makedirs(full_path, 0o777)
+    return path
+
+
 def hash_file(file):
     if not file:
         return None
 
     md5obj = hashlib.md5()
-    md5obj.update(file.read())
+    md5obj.update(file.read() if isinstance(file, FileStorage) else file)
     return md5obj.hexdigest()
 
 
@@ -161,3 +178,77 @@ class UploadImage(object):
         ori_key = hash_key + "_" + size + str(time.time())
         img_name = md5(ori_key) + ".jpg"
         return os.path.join(generate_image_file(), img_name)
+
+
+class UploadVideo(object):
+
+    def __init__(self):
+        from heron import app
+        self.upload_video_path = app.config["UPLOAD_VIDEO_PATH"]
+        self.videos = self.pre_upload()
+
+    def pre_upload(self):
+        video_info_list = list()
+
+        video_file = request.files.get("video")
+        if video_file:
+            video_info_list.append(self.format_video(video_file))
+
+        for item in request.files.getlist("video[]"):
+            video_info_list.append(self.format_video(item))
+
+        return video_info_list
+
+    def save_videos(self):
+
+        for video_dic in self.videos:
+            if not video_dic:
+                continue
+            self.save_video(video_info=video_dic)
+
+        # 提交事务
+        db.session.commit()
+
+    def save_video(self, video_info):
+        video_info["status"] = 1
+        video_model = VideoModel(params=video_info)
+        video_info["video"] = video_model
+
+    def format_video(self, video):
+        result = dict()
+
+        video_data = video.read()
+
+        result["ori_video"] = video
+        result["hash_key"] = hash_file(video_data)
+
+        file_name = secure_filename(video.filename)
+        file_ext = file_name.split(".")[1] if "." in file_name else "mp4"
+
+        result["video_url"] = UploadVideo.generate_video_file_path(result["hash_key"], file_ext)
+        result["full_path"] = os.path.join(self.upload_video_path, result["video_url"])
+
+        with open(result["full_path"], "wb") as file:
+            file.write(video_data)
+
+        clip = VideoFileClip(result["full_path"])
+        result["video_width"] = clip.size[0]
+        result["video_height"] = clip.size[1]
+        result["file_name"] = result["video_url"].split("/")[-1].split(".")[0]
+        result["playing_time"] = int(clip.duration)
+        result["file_size"] = len(video_data)
+        result["file_ext"] = file_ext
+        result["file_format"] = "MP4"
+        result["bitrate_mode"] = str(clip.fps)
+        result["mime_type"] = video.mimetype
+
+        return result
+
+    @staticmethod
+    def generate_video_file_path(hash_key, ext="mp4"):
+        """
+        生成图片的唯一路径
+        """
+        ori_key = hash_key + str(time.time())
+        img_name = md5(ori_key) + "." + ext
+        return os.path.join(generate_video_file(), img_name)

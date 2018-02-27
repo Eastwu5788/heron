@@ -6,7 +6,7 @@ from app.modules.base.base_handler import BaseHandler
 from app.modules.vendor.pre_request.flask import filter_params
 from app.modules.vendor.pre_request.filter_rules import Rule
 
-from app.models.social.share import ShareModel
+from app.models.social.share import ShareModel, status_private
 from app.models.social.like import LikeModel
 from app.models.account.user_info import UserInfoModel
 from app.models.social.share_meta import ShareMetaModel
@@ -26,7 +26,7 @@ class IndexHandler(BaseHandler):
     @filter_params(post=rule)
     def post(self, params):
 
-        share_model = ShareModel.query_share_model(params["share_id"])
+        share_model = ShareModel.query_share_model(params["share_id"], status=status_private)
         if not share_model:
             return json_fail_response(2405)
 

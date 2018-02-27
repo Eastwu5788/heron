@@ -15,6 +15,7 @@ from app.helper.auth import login_required
 from app.helper.utils import array_column
 from app.helper.response import json_success_response, json_fail_response
 from app.helper.upload import UploadImage
+from app.helper.upload import UploadVideo
 
 
 private_library_cache_key = "PrivateLibraryHandler:Cache:Type:"
@@ -102,6 +103,8 @@ class UploadPrivateLibraryHandler(BaseHandler):
     def post(self, params):
         img_uploader = UploadImage()
 
+        result = []
+
         if params["type"] == 11:
             if not img_uploader.images:
                 return json_fail_response(2402)
@@ -110,8 +113,22 @@ class UploadPrivateLibraryHandler(BaseHandler):
 
             result = UploadPrivateLibraryHandler.upload_private_images(img_uploader.images, g.account["user_id"])
             RedisModel.reset_new_message(g.account["user_id"], RedisModel.private_image_want)
-        else:
-            result = []
+        elif params["type"] == 31:
+            if not img_uploader.images:
+                return json_fail_response(2203)
+
+            video_uploader = UploadVideo()
+            if not video_uploader.videos:
+                return json_fail_response(2410)
+
+            img_uploader.save_images()
+            video_uploader.save_videos()
+
+            result = UploadPrivateLibraryHandler.upload_private_video(video_uploader.videos[0]["video"],
+                                                                      img_uploader.images[0]["image"],
+                                                                      g.account["user_id"])
+
+            RedisModel.reset_new_message(g.account["user_id"], RedisModel.private_video_want)
 
         PrivateLibraryHandler.random_private_library_offset(params["type"], g.account["user_id"], True)
         return json_success_response(result)
@@ -135,6 +152,23 @@ class UploadPrivateLibraryHandler(BaseHandler):
             img_model_list.append(img_model)
 
         return ImageModel.format_private_image_model(img_model_list, user_id, user_id)
+
+    @staticmethod
+    def upload_private_video(video_model, image_model, user_id):
+
+        video_model.user_id = user_id
+        video_model.type = 31
+        video_model.cover_id = image_model.image_id
+
+        video_model.screenshot_a = image_model.image_a
+        video_model.screenshot_b = image_model.image_b
+        video_model.screenshot_c = image_model.image_c
+
+        image_model.user_id = user_id
+
+        db.session.commit()
+
+        return
 
 
 class PrivateInfoHandler(BaseHandler):

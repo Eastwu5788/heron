@@ -4,6 +4,7 @@ from app import db
 from app.models.base.base import BaseModel
 from app.models.social.share_meta import ShareMetaModel
 from app.models.social.image import ImageModel
+from app.models.social.video import VideoModel
 from app.models.social.like import LikeModel
 from app.models.social.offer import OfferModel
 from app.helper.utils import *
@@ -113,6 +114,8 @@ class ShareModel(db.Model, BaseModel):
             share_dic["like_count"] = share_meta.like if share_meta else 0
             share_dic["comment_count"] = share_meta.comment if share_meta else 0
             share_dic["click"] = share_meta.click if share_meta else 0
+            share_dic["image"] = dict()
+            share_dic["video"] = dict()
 
             # 格式化用户信息
             from app.models.account.user_info import UserInfoModel
@@ -120,11 +123,17 @@ class ShareModel(db.Model, BaseModel):
             share_dic["user_info"] = UserInfoModel.format_user_info(user_model)
 
             # 格式化图片信息
-            img_model_list = img_model_dict.get(share_model.share_id, None)
-            share_dic["image"] = {
-                "big": ImageModel.format_image_model(img_model_list, size='f'),
-                "small": ImageModel.format_image_model(img_model_list, size='c'),
-            }
+            if share_model.type_id in [8, 10, 11, 40, 50, 51]:
+                img_model_list = img_model_dict.get(share_model.share_id, None)
+                share_dic["image"] = {
+                    "big": ImageModel.format_image_model(img_model_list, size='f'),
+                    "small": ImageModel.format_image_model(img_model_list, size='c'),
+                }
+
+            # 格式化视频信息
+            elif share_model.type_id in [30, 31]:
+                video_model = VideoModel.query_share_video_info(share_model.share_id)
+                share_dic["video"] = VideoModel.format_video_info(video_model)
 
             share_dic["like_list"] = LikeModel.query_like_list(share_model.share_id, limit=5)
 

@@ -4,7 +4,7 @@ from app import db
 from app.models.base.base import BaseModel
 
 from app.models.account.user_info import UserInfoModel
-from app.models.social.share import ShareModel
+from app.models.social.share import ShareModel, status_private
 
 from app.helper.utils import array_column, array_column_key
 
@@ -50,7 +50,7 @@ class CommentModel(db.Model, BaseModel):
         if last_id:
             query = query.filter(CommentModel.comment_id < last_id)
 
-        share_model = ShareModel.query_share_model(share_id)
+        share_model = ShareModel.query_share_model(share_id, status=status_private)
 
         # 如果访问者不是发帖者，则只能显示自己的悄悄话和公开评论
         if share_model.user_id != login_user_id:

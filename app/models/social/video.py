@@ -1,4 +1,5 @@
 import datetime
+import os
 from app.models.base.base import BaseModel
 from app import db, cache
 
@@ -44,3 +45,27 @@ class VideoModel(db.Model, BaseModel):
 
             db.session.add(self)
             db.session.commit()
+
+    @staticmethod
+    def query_share_video_info(share_id):
+        if not share_id:
+            return None
+
+        video = VideoModel.query.filter_by(share_id=share_id, status=1).first()
+        return video
+
+    @staticmethod
+    def format_video_info(video_model):
+        if not video_model or not isinstance(video_model, VideoModel):
+            return dict()
+
+        from app.models.social.image import ImageModel
+        from heron import app
+
+        cover_model = ImageModel.query_image_by_id(video_model.cover_id)
+
+        result = video_model.format_model(attr_list=["video_width", "video_height"])
+        result["video_url"] = app.config["VIDEO_HOST"] + video_model.video_url
+        result["video_img"] = ImageModel.generate_image_url(cover_model, 'f')
+
+        return result

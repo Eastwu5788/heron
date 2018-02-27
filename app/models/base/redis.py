@@ -11,6 +11,8 @@ class RedisModel(object):
 
     private_image_want = "Private:Image:WantBuy:"
 
+    private_video_want = "Private:Video:WantBuy:"
+
     order_push_list = "New:Order:Push:List:"
 
     new_order = "New:Order:Add:"

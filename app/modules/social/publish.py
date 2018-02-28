@@ -118,7 +118,7 @@ class IndexHandler(BaseHandler):
         ShareMetaModel.update_share_meta_model(share.share_id, share.user_id)
 
         # 创建首页推荐数据
-        ShareRecommendModel(share.share_id, share.user_id, position=2, status=2)
+        ShareRecommendModel(share.share_id, share.user_id, position=0, status=3)
 
         share_info = ShareModel.format_share_model([share])
 

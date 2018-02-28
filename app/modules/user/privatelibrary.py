@@ -8,6 +8,8 @@ from app.modules.vendor.pre_request.flask import filter_params
 from app.modules.vendor.pre_request.filter_rules import Rule
 
 from app.models.social.image import ImageModel
+from app.models.social.video import VideoModel
+from app.models.social.video_meta import VideoMetaModel
 from app.models.base.redis import RedisModel
 from app.models.account.user_wechat import UserWeChatModel
 
@@ -60,14 +62,23 @@ class PrivateLibraryHandler(BaseHandler):
             result["want_buy"] = RedisModel.query_new_message(params["user_id"], RedisModel.private_image_want)
         # 私密视频
         else:
-            pass
+            if params["user_id"] == g.account["user_id"]:
+                result["result_data"] = VideoModel.query_private_video(params["user_id"], g.account["user_id"], params["last_id"])
+            else:
+                if params["offset"] == 0 and params["last_id"] == 0:
+                    params["offset"] = int(PrivateLibraryHandler.random_private_library_offset(params["type"], params["user_id"]))
 
+                result["result_data"] = VideoModel.query_random_private_video(params["user_id"],
+                                                                              g.account["user_id"],
+                                                                              params["last_id"],
+                                                                              params["offset"])
+            result["want_buy"] = RedisModel.query_new_message(params["user_id"], RedisModel.private_video_want)
         return json_success_response(result)
 
     @staticmethod
     def random_private_library_offset(library_type, user_id, refresh=False):
         if not user_id:
-            return 0
+            return 1
 
         cache_key = private_library_cache_key + str(library_type) + ":" + str(user_id)
         # 从集合中随机取一个值
@@ -79,7 +90,8 @@ class PrivateLibraryHandler(BaseHandler):
                 model_list = ImageModel.query.filter_by(user_id=user_id, type=11, status=1).all()
                 cache_id_list = array_column(model_list, "image_id")
             else:
-                cache_id_list = []
+                model_list = VideoModel.query.filter_by(user_id=user_id, type=31, status=1).all()
+                cache_id_list = array_column(model_list, "video_id")
             # 更新Redis并返回随机值
             redis.delete(cache_key)
             if cache_id_list:
@@ -126,7 +138,8 @@ class UploadPrivateLibraryHandler(BaseHandler):
 
             result = UploadPrivateLibraryHandler.upload_private_video(video_uploader.videos[0]["video"],
                                                                       img_uploader.images[0]["image"],
-                                                                      g.account["user_id"])
+                                                                      g.account["user_id"],
+                                                                      params["price"])
 
             RedisModel.reset_new_message(g.account["user_id"], RedisModel.private_video_want)
 
@@ -154,7 +167,7 @@ class UploadPrivateLibraryHandler(BaseHandler):
         return ImageModel.format_private_image_model(img_model_list, user_id, user_id)
 
     @staticmethod
-    def upload_private_video(video_model, image_model, user_id):
+    def upload_private_video(video_model, image_model, user_id, price):
 
         video_model.user_id = user_id
         video_model.type = 31
@@ -166,9 +179,15 @@ class UploadPrivateLibraryHandler(BaseHandler):
 
         image_model.user_id = user_id
 
+        video_meta_model = VideoMetaModel()
+        video_meta_model.video_id = video_model.video_id
+        video_meta_model.price = int(price * 100)
+
+        db.session.add(video_meta_model)
         db.session.commit()
 
-        return
+        private_video = VideoModel.format_private_video_model(video_model, image_model, video_meta_model, 1)
+        return [private_video] if private_video else []
 
 
 class PrivateInfoHandler(BaseHandler):

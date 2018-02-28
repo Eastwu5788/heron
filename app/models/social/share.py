@@ -76,7 +76,7 @@ class ShareModel(db.Model, BaseModel):
         return result
 
     @staticmethod
-    def query_share_model(share_id, status=status_public):
+    def query_share_model(share_id, status=status_private):
         query = ShareModel.query.filter_by(share_id=share_id)
         if status:
             query = query.filter(ShareModel.status.in_(status))

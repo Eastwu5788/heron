@@ -7,7 +7,7 @@ from app.modules.vendor.pre_request.flask import filter_params
 from app.modules.vendor.pre_request.filter_rules import Rule
 
 from app.models.account.user_info import UserInfoModel
-from app.models.social.share import ShareModel
+from app.models.social.share import ShareModel, status_private
 from app.models.social.comment import CommentModel
 from app.models.social.share_meta import ShareMetaModel
 from app.models.base.redis import RedisModel
@@ -30,7 +30,7 @@ class IndexHandler(BaseHandler):
     @login_required
     @filter_params(post=rule)
     def post(self, params):
-        share_info = ShareModel.query_share_model(params["share_id"])
+        share_info = ShareModel.query_share_model(params["share_id"], status=status_private)
         if not share_info:
             return json_fail_response(2405)
 

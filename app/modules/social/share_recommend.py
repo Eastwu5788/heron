@@ -20,7 +20,9 @@ class IndexHandler(BaseHandler):
     @filter_params(get=rule)
     def get(self, params):
         # 查询到被推荐动态的id
-        share_id_list = ShareRecommendModel.query_share_recommend_id_list(params["position"], g.account["user_id"], params["share_id"])
+        share_id_list = ShareRecommendModel.query_share_recommend_id_list(params["position"],
+                                                                          g.account.get("user_id", 0),
+                                                                          params["share_id"])
         # 根据动态id查询动态详细信息
         share_list = ShareModel.query_share_info_list(share_id_list)
         # 格式化动态

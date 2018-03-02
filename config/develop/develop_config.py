@@ -46,6 +46,10 @@ class DevelopConfig(BaseConfig):
     UPLOAD_VIDEO_PATH = INI_CONFIG["upload_video"]["video_upload_path"]
     VIDEO_HOST = INI_CONFIG["upload_video"]["video_uri"]
 
+    # 音频上传路径和URI
+    UPLOAD_AUDIO_PATH = INI_CONFIG["upload_audio"]["audio_upload_path"]
+    AUDIO_HOST = INI_CONFIG["upload_audio"]["audio_uri"]
+
     # 微信支付相关账号
     WX_APP_ID = INI_CONFIG["weixin"]["appid"]
     WX_MCH_ID = INI_CONFIG["weixin"]["mch_id"]

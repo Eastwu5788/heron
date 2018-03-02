@@ -10,7 +10,18 @@ from app import db
 from app.helper.secret import md5
 from app.models.social.image import ImageModel
 from app.models.social.video import VideoModel
+from app.models.social.audio import AudioModel
 from moviepy.editor import *
+import eyed3
+
+
+def generate_file(base_dir=""):
+    today = datetime.datetime.today()
+    path = "upload/%d/%02d/%02d/" % (today.year, today.month, today.day)
+    full_path = os.path.join(base_dir, path)
+    if not os.path.exists(full_path):
+        os.makedirs(full_path, 0o777)
+    return path
 
 
 def generate_image_file():
@@ -22,20 +33,6 @@ def generate_image_file():
     today = datetime.datetime.today()
     path = "upload/%d/%02d/%02d/" % (today.year, today.month, today.day)
     full_path = os.path.join(app.config["UPLOAD_IMG_PATH"], path)
-    if not os.path.exists(full_path):
-        os.makedirs(full_path, 0o777)
-    return path
-
-
-def generate_video_file():
-    """
-    生成视频文件存储路径
-    """
-    from heron import app
-
-    today = datetime.datetime.today()
-    path = "upload/%d/%02d/%02d/" % (today.year, today.month, today.day)
-    full_path = os.path.join(app.config["UPLOAD_VIDEO_PATH"], path)
     if not os.path.exists(full_path):
         os.makedirs(full_path, 0o777)
     return path
@@ -225,7 +222,7 @@ class UploadVideo(object):
         file_name = secure_filename(video.filename)
         file_ext = file_name.split(".")[1] if "." in file_name else "mp4"
 
-        result["video_url"] = UploadVideo.generate_video_file_path(result["hash_key"], file_ext)
+        result["video_url"] = self.generate_video_file_path(result["hash_key"], file_ext)
         result["full_path"] = os.path.join(self.upload_video_path, result["video_url"])
 
         with open(result["full_path"], "wb") as file:
@@ -244,11 +241,83 @@ class UploadVideo(object):
 
         return result
 
-    @staticmethod
-    def generate_video_file_path(hash_key, ext="mp4"):
+    def generate_video_file_path(self, hash_key, ext="mp4"):
         """
         生成图片的唯一路径
         """
         ori_key = hash_key + str(time.time())
         img_name = md5(ori_key) + "." + ext
-        return os.path.join(generate_video_file(), img_name)
+        return os.path.join(generate_file(base_dir=self.upload_video_path), img_name)
+
+
+class UploadAudio(object):
+
+    def __init__(self):
+        from heron import app
+        self.upload_audio_path = app.config["UPLOAD_AUDIO_PATH"]
+        self.audios = self.pre_upload()
+
+    def pre_upload(self):
+        audio_info_list = list()
+
+        audio_file = request.files.get("audio")
+        if audio_file:
+            audio_info_list.append(self.format_audio(audio_file))
+
+        for item in request.files.getlist("audio[]"):
+            audio_info_list.append(self.format_audio(item))
+
+        return audio_info_list
+
+    def save_audios(self):
+
+        for audio_dic in self.audios:
+            if not audio_dic:
+                continue
+            self.save_audio(audio_info=audio_dic)
+
+        # 提交事务
+        db.session.commit()
+
+    def save_audio(self, audio_info):
+        audio_info["status"] = 1
+        audio_model = AudioModel(params=audio_info)
+        audio_info["audio"] = audio_model
+
+    def format_audio(self, audio):
+        result = dict()
+
+        audio_data = audio.read()
+
+        result["ori_audio"] = audio
+        result["hash_key"] = hash_file(audio_data)
+
+        file_name = secure_filename(audio.filename)
+        file_ext = file_name.split(".")[1] if "." in file_name else "mp3"
+
+        result["audio_url"] = self.generate_audio_file_path(result["hash_key"], file_ext)
+        result["full_path"] = os.path.join(self.upload_audio_path, result["audio_url"])
+
+        with open(result["full_path"], "wb") as file:
+            file.write(audio_data)
+
+        mp3 = eyed3.load(result["full_path"])
+        result["file_name"] = result["audio_url"].split("/")[-1].split(".")[0]
+        result["playing_time"] = int(mp3.info.time_secs)
+        result["file_size"] = len(audio_data)
+        result["file_ext"] = file_ext
+        result["file_format"] = "MP3"
+        result["bitrate_mode"] = str(mp3.info.bit_rate[1])
+        result["mime_type"] = audio.mimetype
+
+        return result
+
+    def generate_audio_file_path(self, hash_key, ext="mp3"):
+        """
+        生成音频的唯一路径
+        """
+        ori_key = hash_key + str(time.time())
+        audio_name = md5(ori_key) + "." + ext
+        return os.path.join(generate_file(base_dir=self.upload_audio_path), audio_name)
+
+

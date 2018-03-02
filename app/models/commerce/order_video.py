@@ -14,7 +14,6 @@ class OrderVideoModel(db.Model, BaseModel):
     video_id = db.Column(db.Integer, default=0)
     status = db.Column(db.Integer, default=0)
     created_time = db.Column(db.DateTime, default=datetime.datetime.now)
-    updated_time = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     @staticmethod
     def query_order_video_list(user_id, video_id_list):

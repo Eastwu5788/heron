@@ -18,5 +18,5 @@ from . import share_report
 from . import offer
 from . import driftingbottle
 from . import image
-
+from . import audio
 

@@ -19,6 +19,7 @@ class CreateHandler(BaseHandler):
         "pub_time": Rule(),
         "image": Rule(direct_type=int, allow_empty=True, default=0),
         "video": Rule(direct_type=int, allow_empty=True, default=0),
+        "audio": Rule(direct_type=int, allow_empty=True, default=0)
     }
 
     @login_required
@@ -41,7 +42,7 @@ class CreateHandler(BaseHandler):
         else:
             json_data = {}
         if json_data:
-            params["json_data"] = json.dump(json_data)
+            params["json_data"] = json.dumps(json_data)
 
         im_model = IMMsgModel(params=params)
         return json_success_response(im_model.to_dict())

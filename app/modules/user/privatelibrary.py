@@ -210,6 +210,31 @@ class PrivateInfoHandler(BaseHandler):
         return json_success_response(result)
 
 
+class RemindAddHandler(BaseHandler):
+
+    rule = {
+        "user_id": Rule(direct_type=int),
+        "type": Rule(direct_type=int, enum=[11, 31])
+    }
+
+    @login_required
+    @filter_params(post=rule)
+    def post(self, params):
+        if params["user_id"] == g.account["user_id"]:
+            return json_fail_response(2411)
+
+        result = dict()
+
+        RedisModel.add_new_message(params["user_id"],
+                                   RedisModel.private_image_want if params["type"] == 11 else RedisModel.private_video_want)
+
+        result["data"] = 1
+        result["message"] = "邀请成功"
+
+        return json_success_response(result)
+
+
 user.add_url_rule("/privatelibrary/uploadprivatelibrary", view_func=UploadPrivateLibraryHandler.as_view("upload_private_lib"))
 user.add_url_rule("/privatelibrary/privatelibrary", view_func=PrivateLibraryHandler.as_view("private_library"))
 user.add_url_rule("/privatelibrary/privateinfo", view_func=PrivateInfoHandler.as_view("private_info"))
+user.add_url_rule("/privatelibrary/remindadd", view_func=RemindAddHandler.as_view("remind_add"))

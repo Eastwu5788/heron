@@ -14,6 +14,7 @@ class AuthMiddleWare(BaseMiddleWare):
         授权验证中间件
         存储当前登录用户信息
         """
+        print(request.url)
         from app.models.account.account_data import AccountDataModel
         token = request.headers.get("token")
         result = dict()

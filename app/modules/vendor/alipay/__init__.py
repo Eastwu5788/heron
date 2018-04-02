@@ -7,9 +7,12 @@
 """
 import json
 from datetime import datetime
+
+# 关于Crypto安装失败问题，修改下site-packages文件夹中的crypto文件名改为Crypto即可
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA, SHA256
 from Crypto.PublicKey import RSA
+
 
 from .compat import quote_plus, urlopen, decodebytes, encodebytes, b
 from .exceptions import AliPayException, AliPayValidationError

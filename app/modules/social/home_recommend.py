@@ -71,7 +71,7 @@ class HomeRecommendHandler(BaseHandler):
 
             if not params["offset"]:
                 db_count = db.session.query(func.count(HomeRecommendModel.id)).scalar()
-                params["offset"] = randint(1, db_count)
+                params["offset"] = randint(1, db_count) if db_count else 0
                 params["last_id"] = 0
 
             result_list_add = HomeRecommendModel.query_home_random_users(params)

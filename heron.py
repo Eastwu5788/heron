@@ -7,7 +7,7 @@ manager = Manager(app)
 
 @manager.command
 def dev():
-    app.run()
+    app.run(host='0.0.0.0')
 
 
 @manager.command

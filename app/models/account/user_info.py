@@ -84,6 +84,9 @@ class UserInfoModel(db.Model, BaseModel):
 
     @staticmethod
     def format_user_info(user, full=False):
+        if not user:
+            return dict()
+
         user_info_dict = user.to_dict(filter_params=not full)
 
         if not user.avatar:

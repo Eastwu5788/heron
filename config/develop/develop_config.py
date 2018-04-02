@@ -31,6 +31,8 @@ class DevelopConfig(BaseConfig):
     # Open Debug mode
     DEBUG = True
 
+    LOGGER_NAME = "hero_flask_log"
+
     # Redis 配置（TODO: 集群）
     CACHE_REDIS_HOST = INI_REDIS["redis"]["host"]
     CACHE_REDIS_PORT = INI_REDIS["redis"]["port"]

@@ -13,6 +13,7 @@ from app.models.core.open_log import OpenLogModel
 from app.helper.response import *
 from app.helper.secret import check_password
 
+
 class CheckHandler(BaseHandler):
     """
     检查用户是否是老用户: /passport/login/check

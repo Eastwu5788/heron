@@ -1,13 +1,18 @@
+import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cache import Cache
 from .modules.vendor.flask_redis import FlaskRedis
 from config.setting import config, MIDDLEWARE
+from config import initialize_logging
 from .middleware.base_middleware import BaseMiddleWare
+
+initialize_logging("heron")
 
 db = SQLAlchemy()
 cache = Cache()
 redis = FlaskRedis()
+log = logging.getLogger("heron")
 
 
 def create_app(config_name):

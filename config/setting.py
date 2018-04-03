@@ -6,11 +6,13 @@ from config.product.product_config import ProductConfig
 
 from app.middleware.auth_middleware import AuthMiddleWare
 from app.middleware.secret_middleware import SecretMiddleWare
+from app.middleware.log_middleware import LogMiddleWare
 
 # App 秘钥
 SECRET_KEY = 'p*ggd=o#y8ws1fspup!jnw9m0mo=4+fs1a!l!eu%h&b=jfx$x#'
 
 MIDDLEWARE = [
+    LogMiddleWare,
     SecretMiddleWare,
     AuthMiddleWare,
 ]

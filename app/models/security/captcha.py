@@ -4,10 +4,7 @@ from yunpian_python_sdk.ypclient import YunpianClient
 
 from app import cache
 from config.setting import MOBILE_WHITE_LIST
-from heron import app
-
-# 云片客户端
-client = YunpianClient(app.config["SMS_YP_API_KEY"])
+from flask import current_app
 
 
 class CaptchaModel(object):
@@ -44,6 +41,8 @@ class CaptchaModel(object):
 
         params = {YC.MOBILE: mobile, YC.TEXT: CaptchaModel.generate_sms_content(sms_code, 1)}
         # 发送验证码
+        # 云片客户端
+        client = YunpianClient(current_app.config["SMS_YP_API_KEY"])
         send_result = client.sms().single_send(params)
 
         if send_result.code() == 0:

@@ -8,6 +8,7 @@ from app.modules.vendor.pre_request.filter_rules import Rule, Length
 
 from app import db
 from app.helper.response import *
+from app.helper.ease_mob import mob_client
 from app.modules.base.base_handler import BaseHandler
 
 from app.models.account.user_account import UserAccountModel
@@ -56,10 +57,12 @@ class RegisterHandler(BaseHandler):
         user_social.live_region_name = "中国"
 
         # 环信账号
-        from heron import app
         user_id_relation = UserIdRelationModel()
         user_id_relation.user_id = account.id
         user_id_relation.str_id = md5(str(account.id))  # md5(app.config["CACHE_KEY_PREFIX"] + str(account.id))
+
+        # 注册环信账号
+        mob_client().register_new_user(user_id_relation.str_id)
 
         # 提交到数据库
         db.session.add(user_info)

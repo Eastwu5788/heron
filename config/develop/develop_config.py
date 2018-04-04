@@ -31,8 +31,6 @@ class DevelopConfig(BaseConfig):
     # Open Debug mode
     DEBUG = True
 
-    LOGGER_NAME = "hero_flask_log"
-
     # Redis 配置（TODO: 集群）
     CACHE_REDIS_HOST = INI_REDIS["redis"]["host"]
     CACHE_REDIS_PORT = INI_REDIS["redis"]["port"]
@@ -66,6 +64,12 @@ class DevelopConfig(BaseConfig):
     ALI_PRIVATE_KEY_PATH = INI_CONFIG["ali"]["private_key_path"]
     ALI_PUBLIC_KEY_PATH = INI_CONFIG["ali"]["public_key_path"]
     ALI_CACERT_PATH = INI_CONFIG["ali"]["cacert"]
+
+    # 环信相关
+    MOB_CLIENT_ID = INI_CONFIG["ease_mob"]["client_id"]
+    MOB_CLIENT_SECRET = INI_CONFIG["ease_mob"]["client_secret"]
+    MOB_ORG_NAME = INI_CONFIG["ease_mob"]["org_name"]
+    MOB_APP_NAME = INI_CONFIG["ease_mob"]["app_name"]
 
     @staticmethod
     def init_app(app):

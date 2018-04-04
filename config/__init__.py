@@ -4,7 +4,7 @@ import sys
 import traceback
 from logging.handlers import TimedRotatingFileHandler
 
-log = logging.getLogger("")
+log = logging.getLogger("heron")
 
 
 def get_logging_config(cfg_path=None):
@@ -14,8 +14,6 @@ def get_logging_config(cfg_path=None):
     """
     logging_config = {
         "log_level": None,
-        "heron_log_file": "/data/logs/heron.log",
-        "request_log_file": "/data/logs/request.log",
     }
 
     return logging_config
@@ -39,7 +37,10 @@ def initialize_logging(logger_name):
         )
 
         log_file = logging_config.get("%s_log_file" % logger_name)
-        if log_file is not None and not logging_config.get("disable_file_logging"):
+        if not log_file:
+            log_file = "/data/logs/%s.log" % logger_name
+
+        if not logging_config.get("disable_file_logging"):
             if os.access(os.path.dirname(log_file), os.R_OK | os.W_OK):
                 file_handler = TimedRotatingFileHandler(log_file)
 

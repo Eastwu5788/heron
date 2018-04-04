@@ -1,8 +1,15 @@
+from flask import current_app
 from app import cache
 import requests
 import json
+import logging
+from config import initialize_logging
+
+initialize_logging("mob")
 
 ease_mob_token_cache_key = "EaseMobManager:Token:Cache:Key"
+
+log = logging.getLogger("mob")
 
 
 class EaseMobManager(object):
@@ -44,7 +51,21 @@ class EaseMobManager(object):
         header = dict({"Authorization": access_token}, **self.request_header)
         params = {"username": ease_mob_id, "password": ease_mob_id}
         request = requests.post(self.generate_user_url(), headers=header, data=json.dumps(params))
+
+        log.info(json.dumps({
+            "params": params,
+            "token": access_token,
+            "response": request.json(),
+        }))
+
         if request.status_code == 200:
             return True
         else:
             return False
+
+
+def mob_client():
+    return EaseMobManager(client_id=current_app.config["MOB_CLIENT_ID"],
+                          client_secret=current_app.config["MOB_CLIENT_SECRET"],
+                          org_name=current_app.config["MOB_ORG_NAME"],
+                          app_name=current_app.config["MOB_APP_NAME"])

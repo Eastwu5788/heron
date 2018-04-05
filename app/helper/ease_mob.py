@@ -40,12 +40,22 @@ class EaseMobManager(object):
         request = requests.post(self.generate_token_url(), headers=self.request_header, data=json.dumps(params))
 
         access_token = request.json().get("access_token", None)
+
+        # 请求access_token失败的log
+        if not access_token:
+            log.error(json.dumps({
+                "params": params,
+                "result": request.json(),
+            }))
+
         if access_token:
             cache.set(ease_mob_token_cache_key, access_token, 60*60*24)
         return access_token
 
     def register_new_user(self, ease_mob_id):
         access_token = self.request_access_token()
+        if not access_token:
+            return
         access_token = "Bearer " + access_token
 
         header = dict({"Authorization": access_token}, **self.request_header)

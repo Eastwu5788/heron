@@ -87,7 +87,7 @@ class IndexHandler(BaseHandler):
         if relation:
             result["huanxin_uid"] = relation.str_id
 
-        if not result["gender"]:
+        if not result.get("gender"):
             result["perfect_info"] = 1
 
         if not result["password"]:

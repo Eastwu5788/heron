@@ -20,4 +20,8 @@ class AuthMiddleWare(BaseMiddleWare):
         if token:
             result = AccountDataModel.query_request_account_by_token(token)
             result["token"] = token
+
+        if not result.get("user_id"):
+            result["user_id"] = 0
+
         g.account = result

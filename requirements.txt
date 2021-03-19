@@ -13,7 +13,7 @@ Flask-Uploads==0.2.1
 idna==2.6
 imageio==2.1.2
 itsdangerous==0.24
-Jinja2==2.10
+Jinja2==2.11.3
 libmc==1.1.0
 MarkupSafe==1.0
 moviepy==0.2.3.2
